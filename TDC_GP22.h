@@ -1045,7 +1045,7 @@ extern "C"
     {
         TDC_GP22_t GP22x; // FIXME This attribute depends on a port type!!, drivers must be self-contained
 
-        SPI_t SPI;
+        SPI_t SPIx;
         GPIO_t Reset;
         GPIO_t ChipSelect;
         GPIO_t Fire;

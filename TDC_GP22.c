@@ -1015,6 +1015,9 @@ static TDC_GP22_Status_t TDC_GP22_Write( TDC_GP22_Instance_t * Instance, uint8_t
 
         TDC_GP22_Instance_Context_t * Context = &TDC_GP22_Context.Context[ Instance->GP22x ];
 
+        Context->Transmit.Length = 0;
+        Context->Receive.Length = 0;
+
         Context->Transmit.Content[ Context->Transmit.Length ] = address;
         Context->Transmit.Length++;
         UTIL_MemoryCopy( Context->Transmit.Content + Context->Transmit.Length, buffer, length );
@@ -1053,6 +1056,9 @@ static TDC_GP22_Status_t TDC_GP22_Read( TDC_GP22_Instance_t * Instance, uint8_t 
         TDC_Trace( "%s( Instance=%p, address=%02X, buffer=%p, length=%d )", __FUNCTION__, Instance, address, buffer, length );
 
         TDC_GP22_Instance_Context_t * Context = &TDC_GP22_Context.Context[ Instance->GP22x ];
+
+        Context->Transmit.Length = 0;
+        Context->Receive.Length = 0;
 
         Context->Transmit.Content[ Context->Transmit.Length ] = address;
         Context->Transmit.Length++;
@@ -1543,9 +1549,9 @@ static TDC_GP22_Status_t TDC_GP22_OperationTestReadResolve( TDC_GP22_Instance_t 
 
         if ( ( Context->Event & TDC_GP22_Event_SPI_Success ) == TDC_GP22_Event_SPI_Success )
         {
-            TDC_GP22_Response_t * TDC_GP22_Response = ( TDC_GP22_Response_t * ) Context->Receive.Content;
-            UTIL_MemoryReverse( TDC_GP22_Response->Value, UTIL_SizeOf( Operation->Context.read_value ) ); // TDC-GP22 sends MSB first, STM32 is little-endian. So, reverse
-            UTIL_MemoryCopy( &Operation->Context.read_value, TDC_GP22_Response->Value, UTIL_SizeOf( Operation->Context.read_value ) );
+            TDC_GP22_Response_t * Response = ( TDC_GP22_Response_t * ) Context->Receive.Content;
+            UTIL_MemoryReverse( Response->Value, UTIL_SizeOf( Operation->Context.read_value ) ); // TDC-GP22 sends MSB first, STM32 is little-endian. So, reverse
+            UTIL_MemoryCopy( &Operation->Context.read_value, Response->Value, UTIL_SizeOf( Operation->Context.read_value ) );
             Context->Receive.Length -= UTIL_SizeOf( TDC_GP22_OpCode_t ) + UTIL_SizeOf( Operation->Context.read_value );
             Context->Transmit.Length--;
 
@@ -1623,7 +1629,6 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_0_Resolve( TDC_GP22_In
         TIM_Status_t TIM_Status = TIM_Status_Error;
         if ( ( TIM_Status = TIM_IsExpiredTimestamp( TDC_TIM, &Operation->Timeout ) ) == TIM_Status_Success )
         {
-            Context->Transmit.Length = 0;
             Operation->Status = TDC_GP22_Status_Timeout;
             Operation->Handler = NULL;
             break;
@@ -1631,7 +1636,6 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_0_Resolve( TDC_GP22_In
 
         if ( ( Context->Event & TDC_GP22_Event_SPI_Success ) == TDC_GP22_Event_SPI_Success )
         {
-            Context->Transmit.Length = 0;
             Operation->Status = TDC_GP22_Status_Success;
             Operation->Handler = NULL;
             break;
@@ -1699,7 +1703,6 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_1_Resolve( TDC_GP22_In
         TIM_Status_t TIM_Status = TIM_Status_Error;
         if ( ( TIM_Status = TIM_IsExpiredTimestamp( TDC_TIM, &Operation->Timeout ) ) == TIM_Status_Success )
         {
-            Context->Transmit.Length = 0;
             Operation->Status = TDC_GP22_Status_Timeout;
             Operation->Handler = NULL;
             break;
@@ -1707,7 +1710,6 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_1_Resolve( TDC_GP22_In
 
         if ( ( Context->Event & TDC_GP22_Event_SPI_Success ) == TDC_GP22_Event_SPI_Success )
         {
-            Context->Transmit.Length = 0;
             Operation->Status = TDC_GP22_Status_Success;
             Operation->Handler = NULL;
             break;
@@ -1775,7 +1777,6 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_2_Resolve( TDC_GP22_In
         TIM_Status_t TIM_Status = TIM_Status_Error;
         if ( ( TIM_Status = TIM_IsExpiredTimestamp( TDC_TIM, &Operation->Timeout ) ) == TIM_Status_Success )
         {
-            Context->Transmit.Length = 0;
             Operation->Status = TDC_GP22_Status_Timeout;
             Operation->Handler = NULL;
             break;
@@ -1783,7 +1784,6 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_2_Resolve( TDC_GP22_In
 
         if ( ( Context->Event & TDC_GP22_Event_SPI_Success ) == TDC_GP22_Event_SPI_Success )
         {
-            Context->Transmit.Length = 0;
             Operation->Status = TDC_GP22_Status_Success;
             Operation->Handler = NULL;
             break;
@@ -1851,7 +1851,6 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_3_Resolve( TDC_GP22_In
         TIM_Status_t TIM_Status = TIM_Status_Error;
         if ( ( TIM_Status = TIM_IsExpiredTimestamp( TDC_TIM, &Operation->Timeout ) ) == TIM_Status_Success )
         {
-            Context->Transmit.Length = 0;
             Operation->Status = TDC_GP22_Status_Timeout;
             Operation->Handler = NULL;
             break;
@@ -1859,7 +1858,6 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_3_Resolve( TDC_GP22_In
 
         if ( ( Context->Event & TDC_GP22_Event_SPI_Success ) == TDC_GP22_Event_SPI_Success )
         {
-            Context->Transmit.Length = 0;
             Operation->Status = TDC_GP22_Status_Success;
             Operation->Handler = NULL;
             break;
@@ -1927,7 +1925,6 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_4_Resolve( TDC_GP22_In
         TIM_Status_t TIM_Status = TIM_Status_Error;
         if ( ( TIM_Status = TIM_IsExpiredTimestamp( TDC_TIM, &Operation->Timeout ) ) == TIM_Status_Success )
         {
-            Context->Transmit.Length = 0;
             Operation->Status = TDC_GP22_Status_Timeout;
             Operation->Handler = NULL;
             break;
@@ -1935,7 +1932,6 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_4_Resolve( TDC_GP22_In
 
         if ( ( Context->Event & TDC_GP22_Event_SPI_Success ) == TDC_GP22_Event_SPI_Success )
         {
-            Context->Transmit.Length = 0;
             Operation->Status = TDC_GP22_Status_Success;
             Operation->Handler = NULL;
             break;
@@ -2003,7 +1999,6 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_5_Resolve( TDC_GP22_In
         TIM_Status_t TIM_Status = TIM_Status_Error;
         if ( ( TIM_Status = TIM_IsExpiredTimestamp( TDC_TIM, &Operation->Timeout ) ) == TIM_Status_Success )
         {
-            Context->Transmit.Length = 0;
             Operation->Status = TDC_GP22_Status_Timeout;
             Operation->Handler = NULL;
             break;
@@ -2011,7 +2006,6 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_5_Resolve( TDC_GP22_In
 
         if ( ( Context->Event & TDC_GP22_Event_SPI_Success ) == TDC_GP22_Event_SPI_Success )
         {
-            Context->Transmit.Length = 0;
             Operation->Status = TDC_GP22_Status_Success;
             Operation->Handler = NULL;
             break;
@@ -2079,7 +2073,6 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_6_Resolve( TDC_GP22_In
         TIM_Status_t TIM_Status = TIM_Status_Error;
         if ( ( TIM_Status = TIM_IsExpiredTimestamp( TDC_TIM, &Operation->Timeout ) ) == TIM_Status_Success )
         {
-            Context->Transmit.Length = 0;
             Operation->Status = TDC_GP22_Status_Timeout;
             Operation->Handler = NULL;
             break;
@@ -2087,7 +2080,6 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_6_Resolve( TDC_GP22_In
 
         if ( ( Context->Event & TDC_GP22_Event_SPI_Success ) == TDC_GP22_Event_SPI_Success )
         {
-            Context->Transmit.Length = 0;
             Operation->Status = TDC_GP22_Status_Success;
             Operation->Handler = NULL;
             break;
@@ -2121,7 +2113,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationInitExecute( TDC_GP22_Instance_t * In
         Operation->Timeout = TDC_GP22_Context.Timestamp;
 
         TIM_Status_t TIM_Status = TIM_Status_Error;
-        if ( ( TIM_Status = TIM_Timestamp_AddMillisecond( &Operation->Timeout, 0 ) ) != TIM_Status_Success )
+        if ( ( TIM_Status = TIM_Timestamp_AddMillisecond( &Operation->Timeout, 1000 ) ) != TIM_Status_Success )
         {
             Status = TDC_GP22_Status_Error;
             break;
@@ -2153,6 +2145,13 @@ static TDC_GP22_Status_t TDC_GP22_OperationInitResolve( TDC_GP22_Instance_t * In
 
         TIM_Status_t TIM_Status = TIM_Status_Error;
         if ( ( TIM_Status = TIM_IsExpiredTimestamp( TDC_TIM, &Operation->Timeout ) ) == TIM_Status_Success )
+        {
+            Operation->Status = TDC_GP22_Status_Timeout;
+            Operation->Handler = NULL;
+            break;
+        }
+
+        if ( ( Context->Event & TDC_GP22_Event_SPI_Success ) == TDC_GP22_Event_SPI_Success )
         {
             Operation->Status = TDC_GP22_Status_Success;
             Operation->Handler = NULL;
@@ -2189,7 +2188,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationTimeOfFlightRestartExecute( TDC_GP22_
         Operation->Timeout = TDC_GP22_Context.Timestamp;
 
         TIM_Status_t TIM_Status = TIM_Status_Error;
-        if ( ( TIM_Status = TIM_Timestamp_AddMillisecond( &Operation->Timeout, 500 /* FIXME Resolve Magic Number */ ) ) != TIM_Status_Success )
+        if ( ( TIM_Status = TIM_Timestamp_AddMillisecond( &Operation->Timeout, 1000 /* FIXME Resolve Magic Number */ ) ) != TIM_Status_Success )
         {
             Status = TDC_GP22_Status_Error;
             break;

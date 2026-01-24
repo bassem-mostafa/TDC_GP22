@@ -260,8 +260,8 @@ extern "C"
     typedef enum TDC_GP22_CalibrationPeriod
     {
         TDC_GP22_CalibrationPeriod_2 = 0, ///< 2 Periods (Minimum)
-        TDC_GP22_CalibrationPeriod_4,     ///<
-        TDC_GP22_CalibrationPeriod_8,     ///<
+        TDC_GP22_CalibrationPeriod_4,     ///< 4 Periods
+        TDC_GP22_CalibrationPeriod_8,     ///< 8 Periods
         TDC_GP22_CalibrationPeriod_16,    ///< 16 Periods (Maximum)
     } TDC_GP22_CalibrationPeriod_t;
 
@@ -273,7 +273,7 @@ extern "C"
     typedef enum TDC_GP22_OscillatorDivider
     {
         TDC_GP22_OscillatorDivider_1 = 0, ///< Divider 1 (Minimum)
-        TDC_GP22_OscillatorDivider_2,     ///<
+        TDC_GP22_OscillatorDivider_2,     ///< Divider 2
         TDC_GP22_OscillatorDivider_4,     ///< Divider 4 (Maximum)
     } TDC_GP22_OscillatorDivider_t;
 

@@ -381,8 +381,6 @@ typedef enum TDC_GP22_OperationType
     TDC_GP22_OperationType_CommitRegister6,     ///< Commit Register 6
     TDC_GP22_OperationType_Init,                ///< Init
     TDC_GP22_OperationType_TimeOfFlightRestart, ///< TOF Restart
-
-    // TODO Add More Operation Types
 } TDC_GP22_OperationType_t;
 
 /**
@@ -545,26 +543,26 @@ static TDC_GP22_Status_t TDC_GP22_OperationTestWriteResolve( TDC_GP22_Instance_t
 static TDC_GP22_Status_t TDC_GP22_OperationTestReadExecute( TDC_GP22_Instance_t * Instance );
 static TDC_GP22_Status_t TDC_GP22_OperationTestReadResolve( TDC_GP22_Instance_t * Instance );
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister0Execute( TDC_GP22_Instance_t * Instance );
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister0Resolve( TDC_GP22_Instance_t * Instance );
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_0_Execute( TDC_GP22_Instance_t * Instance );
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_0_Resolve( TDC_GP22_Instance_t * Instance );
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister1Execute( TDC_GP22_Instance_t * Instance );
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister1Resolve( TDC_GP22_Instance_t * Instance );
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_1_Execute( TDC_GP22_Instance_t * Instance );
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_1_Resolve( TDC_GP22_Instance_t * Instance );
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister2Execute( TDC_GP22_Instance_t * Instance );
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister2Resolve( TDC_GP22_Instance_t * Instance );
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_2_Execute( TDC_GP22_Instance_t * Instance );
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_2_Resolve( TDC_GP22_Instance_t * Instance );
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister3Execute( TDC_GP22_Instance_t * Instance );
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister3Resolve( TDC_GP22_Instance_t * Instance );
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_3_Execute( TDC_GP22_Instance_t * Instance );
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_3_Resolve( TDC_GP22_Instance_t * Instance );
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister4Execute( TDC_GP22_Instance_t * Instance );
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister4Resolve( TDC_GP22_Instance_t * Instance );
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_4_Execute( TDC_GP22_Instance_t * Instance );
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_4_Resolve( TDC_GP22_Instance_t * Instance );
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister5Execute( TDC_GP22_Instance_t * Instance );
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister5Resolve( TDC_GP22_Instance_t * Instance );
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_5_Execute( TDC_GP22_Instance_t * Instance );
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_5_Resolve( TDC_GP22_Instance_t * Instance );
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister6Execute( TDC_GP22_Instance_t * Instance );
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister6Resolve( TDC_GP22_Instance_t * Instance );
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_6_Execute( TDC_GP22_Instance_t * Instance );
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_6_Resolve( TDC_GP22_Instance_t * Instance );
 
 static TDC_GP22_Status_t TDC_GP22_OperationInitExecute( TDC_GP22_Instance_t * Instance );
 static TDC_GP22_Status_t TDC_GP22_OperationInitResolve( TDC_GP22_Instance_t * Instance );
@@ -880,6 +878,8 @@ static TDC_GP22_Status_t TDC_GP22_Instance_Cycle( TDC_GP22_Instance_t * Instance
         TDC_GP22_Instance_Context_t * Context = &TDC_GP22_Context.Context[ Instance->GP22x ];
         TDC_GP22_Process_t * Process = &Context->Process;
         TDC_GP22_Operation_t * Operation = &Process->Context.Operation;
+        TDC_GP22_Event_t Event = Context->Event; // CAUTION: Has to copy events occurred at the early start of the cycle, so as to be cleared at the end of the cycle,
+                                                 //          which let events occurs after that for the next cycle call
 
         if ( Operation->Handler != NULL )
         {
@@ -901,30 +901,30 @@ static TDC_GP22_Status_t TDC_GP22_Instance_Cycle( TDC_GP22_Instance_t * Instance
             }
         }
 
-        if ( ( Instance->Context->Event & TDC_GP22_Event_Interrupt ) == TDC_GP22_Event_Interrupt )
+        if ( ( Event & TDC_GP22_Event_Interrupt ) == TDC_GP22_Event_Interrupt )
         {
-            Instance->Context->Event &= ~TDC_GP22_Event_Interrupt;
+            Context->Event &= ~TDC_GP22_Event_Interrupt;
             TDC_Trace( "Interrupt: Instance=%p, GP22x=%d", Instance, Instance->GP22x );
             // TODO Invoke Callback
         }
 
-        if ( ( Instance->Context->Event & TDC_GP22_Event_Timeout ) == TDC_GP22_Event_Timeout )
+        if ( ( Event & TDC_GP22_Event_Timeout ) == TDC_GP22_Event_Timeout )
         {
-            Instance->Context->Event &= ~TDC_GP22_Event_Timeout;
+            Context->Event &= ~TDC_GP22_Event_Timeout;
             TDC_Debug( "Timeout: Instance=%p, GP22x=%d", Instance, Instance->GP22x );
             // TODO Invoke Callback
         }
 
-        if ( ( Instance->Context->Event & TDC_GP22_Event_SPI_Success ) == TDC_GP22_Event_SPI_Success )
+        if ( ( Event & TDC_GP22_Event_SPI_Success ) == TDC_GP22_Event_SPI_Success )
         {
-            Instance->Context->Event &= ~TDC_GP22_Event_SPI_Success;
+            Context->Event &= ~TDC_GP22_Event_SPI_Success;
             TDC_Debug( "SPI Success: Instance=%p, GP22x=%d", Instance, Instance->GP22x );
             // TODO Invoke Callback
         }
 
-        if ( ( Instance->Context->Event & TDC_GP22_Event_SPI_Error ) == TDC_GP22_Event_SPI_Error )
+        if ( ( Event & TDC_GP22_Event_SPI_Error ) == TDC_GP22_Event_SPI_Error )
         {
-            Instance->Context->Event &= ~TDC_GP22_Event_SPI_Error;
+            Context->Event &= ~TDC_GP22_Event_SPI_Error;
             TDC_Debug( "SPI Error: Instance=%p, GP22x=%d", Instance, Instance->GP22x );
             // TODO Invoke Callback
         }
@@ -1073,21 +1073,8 @@ static TDC_GP22_Status_t TDC_GP22_Read( TDC_GP22_Instance_t * Instance, uint8_t 
                 Status = TDC_GP22_Status_Error;
                 break;
             }
-
-            if ( ( GPIO_Status = GPIO_Write( Instance->ChipSelect, GPIO_Value_High ) ) != GPIO_Status_Success )
-            {
-                Status = TDC_GP22_Status_Error;
-                break;
-            }
-
-            TDC_GP22_Response_t * TDC_GP22_Response = ( TDC_GP22_Response_t * ) Context->Receive.Content;
-            UTIL_MemoryReverse( TDC_GP22_Response->Value, length ); // TDC-GP22 sends MSB first, STM32 is little-endian. So, reverse
-            UTIL_MemoryCopy( buffer, TDC_GP22_Response->Value, length );
         }
         while ( 0 );
-
-        Context->Receive.Length -= UTIL_SizeOf( TDC_GP22_OpCode_t ) + length;
-        Context->Transmit.Length--;
     }
     while ( 0 );
 
@@ -1143,31 +1130,31 @@ static TDC_GP22_Status_t TDC_GP22_ProcessInitialize( TDC_GP22_Instance_t * Insta
                 break;
 
             case TDC_GP22_OperationType_TestRead:
-                Operation->Status = TDC_GP22_OperationCommitRegister0Execute( Instance );
+                Operation->Status = TDC_GP22_OperationCommitRegister_0_Execute( Instance );
                 break;
 
             case TDC_GP22_OperationType_CommitRegister0:
-                Operation->Status = TDC_GP22_OperationCommitRegister1Execute( Instance );
+                Operation->Status = TDC_GP22_OperationCommitRegister_1_Execute( Instance );
                 break;
 
             case TDC_GP22_OperationType_CommitRegister1:
-                Operation->Status = TDC_GP22_OperationCommitRegister2Execute( Instance );
+                Operation->Status = TDC_GP22_OperationCommitRegister_2_Execute( Instance );
                 break;
 
             case TDC_GP22_OperationType_CommitRegister2:
-                Operation->Status = TDC_GP22_OperationCommitRegister3Execute( Instance );
+                Operation->Status = TDC_GP22_OperationCommitRegister_3_Execute( Instance );
                 break;
 
             case TDC_GP22_OperationType_CommitRegister3:
-                Operation->Status = TDC_GP22_OperationCommitRegister4Execute( Instance );
+                Operation->Status = TDC_GP22_OperationCommitRegister_4_Execute( Instance );
                 break;
 
             case TDC_GP22_OperationType_CommitRegister4:
-                Operation->Status = TDC_GP22_OperationCommitRegister5Execute( Instance );
+                Operation->Status = TDC_GP22_OperationCommitRegister_5_Execute( Instance );
                 break;
 
             case TDC_GP22_OperationType_CommitRegister5:
-                Operation->Status = TDC_GP22_OperationCommitRegister6Execute( Instance );
+                Operation->Status = TDC_GP22_OperationCommitRegister_6_Execute( Instance );
                 break;
 
             case TDC_GP22_OperationType_CommitRegister6:
@@ -1232,31 +1219,31 @@ static TDC_GP22_Status_t TDC_GP22_ProcessTimeOfFlightRestart( TDC_GP22_Instance_
                 break;
 
             case TDC_GP22_OperationType_PowerOn:
-                Operation->Status = TDC_GP22_OperationCommitRegister0Execute( Instance );
+                Operation->Status = TDC_GP22_OperationCommitRegister_0_Execute( Instance );
                 break;
 
             case TDC_GP22_OperationType_CommitRegister0:
-                Operation->Status = TDC_GP22_OperationCommitRegister1Execute( Instance );
+                Operation->Status = TDC_GP22_OperationCommitRegister_1_Execute( Instance );
                 break;
 
             case TDC_GP22_OperationType_CommitRegister1:
-                Operation->Status = TDC_GP22_OperationCommitRegister2Execute( Instance );
+                Operation->Status = TDC_GP22_OperationCommitRegister_2_Execute( Instance );
                 break;
 
             case TDC_GP22_OperationType_CommitRegister2:
-                Operation->Status = TDC_GP22_OperationCommitRegister3Execute( Instance );
+                Operation->Status = TDC_GP22_OperationCommitRegister_3_Execute( Instance );
                 break;
 
             case TDC_GP22_OperationType_CommitRegister3:
-                Operation->Status = TDC_GP22_OperationCommitRegister4Execute( Instance );
+                Operation->Status = TDC_GP22_OperationCommitRegister_4_Execute( Instance );
                 break;
 
             case TDC_GP22_OperationType_CommitRegister4:
-                Operation->Status = TDC_GP22_OperationCommitRegister5Execute( Instance );
+                Operation->Status = TDC_GP22_OperationCommitRegister_5_Execute( Instance );
                 break;
 
             case TDC_GP22_OperationType_CommitRegister5:
-                Operation->Status = TDC_GP22_OperationCommitRegister6Execute( Instance );
+                Operation->Status = TDC_GP22_OperationCommitRegister_6_Execute( Instance );
                 break;
 
             case TDC_GP22_OperationType_CommitRegister6:
@@ -1431,6 +1418,12 @@ static TDC_GP22_Status_t TDC_GP22_OperationTestWriteExecute( TDC_GP22_Instance_t
         TDC_GP22_Process_t * Process = &Context->Process;
         TDC_GP22_Operation_t * Operation = &Process->Context.Operation;
 
+        Operation->Context.write_value = 0xA5000000;
+        if ( ( Status = TDC_GP22_Write( Instance, TDC_GP22_OpCode_WriteRegister1, ( uint8_t * ) &Operation->Context.write_value, UTIL_SizeOf( Operation->Context.write_value ) ) ) != TDC_GP22_Status_Success )
+        {
+            break;
+        }
+
         Operation->Type = TDC_GP22_OperationType_TestWrite;
         Operation->Handler = TDC_GP22_OperationTestWriteResolve;
         Operation->Status = TDC_GP22_Status_Success;
@@ -1440,12 +1433,6 @@ static TDC_GP22_Status_t TDC_GP22_OperationTestWriteExecute( TDC_GP22_Instance_t
         if ( ( TIM_Status = TIM_Timestamp_AddMillisecond( &Operation->Timeout, 1000 ) ) != TIM_Status_Success )
         {
             Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        Operation->Context.write_value = 0xA5000000;
-        if ( ( Status = TDC_GP22_Write( Instance, TDC_GP22_OpCode_WriteRegister1, ( uint8_t * ) &Operation->Context.write_value, UTIL_SizeOf( Operation->Context.write_value ) ) ) != TDC_GP22_Status_Success )
-        {
             break;
         }
     }
@@ -1539,9 +1526,9 @@ static TDC_GP22_Status_t TDC_GP22_OperationTestReadResolve( TDC_GP22_Instance_t 
         TDC_GP22_Process_t * Process = &Context->Process;
         TDC_GP22_Operation_t * Operation = &Process->Context.Operation;
 
-        if ( Operation->Type != TDC_GP22_OperationType_TestWrite )
+        if ( Operation->Type != TDC_GP22_OperationType_TestRead )
         {
-            TDC_Error( "%s Got %d Expected %d", __FUNCTION__, Operation->Type, TDC_GP22_OperationType_TestWrite );
+            TDC_Error( "%s Got %d Expected %d", __FUNCTION__, Operation->Type, TDC_GP22_OperationType_TestRead );
             Status = TDC_GP22_Status_Error;
             break;
         }
@@ -1556,6 +1543,12 @@ static TDC_GP22_Status_t TDC_GP22_OperationTestReadResolve( TDC_GP22_Instance_t 
 
         if ( ( Context->Event & TDC_GP22_Event_SPI_Success ) == TDC_GP22_Event_SPI_Success )
         {
+            TDC_GP22_Response_t * TDC_GP22_Response = ( TDC_GP22_Response_t * ) Context->Receive.Content;
+            UTIL_MemoryReverse( TDC_GP22_Response->Value, UTIL_SizeOf( Operation->Context.read_value ) ); // TDC-GP22 sends MSB first, STM32 is little-endian. So, reverse
+            UTIL_MemoryCopy( &Operation->Context.read_value, TDC_GP22_Response->Value, UTIL_SizeOf( Operation->Context.read_value ) );
+            Context->Receive.Length -= UTIL_SizeOf( TDC_GP22_OpCode_t ) + UTIL_SizeOf( Operation->Context.read_value );
+            Context->Transmit.Length--;
+
             if ( Operation->Context.read_value == Operation->Context.write_value )
             {
                 Operation->Status = TDC_GP22_Status_Success;
@@ -1573,7 +1566,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationTestReadResolve( TDC_GP22_Instance_t 
     return Status;
 }
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister0Execute( TDC_GP22_Instance_t * Instance )
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_0_Execute( TDC_GP22_Instance_t * Instance )
 {
     TDC_GP22_Status_t Status = TDC_GP22_Status_Success;
 
@@ -1592,7 +1585,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister0Execute( TDC_GP22_Inst
         }
 
         Operation->Type = TDC_GP22_OperationType_CommitRegister0;
-        Operation->Handler = TDC_GP22_OperationCommitRegister0Resolve;
+        Operation->Handler = TDC_GP22_OperationCommitRegister_0_Resolve;
         Operation->Status = TDC_GP22_Status_Success;
         Operation->Timeout = TDC_GP22_Context.Timestamp;
 
@@ -1608,7 +1601,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister0Execute( TDC_GP22_Inst
     return Status;
 }
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister0Resolve( TDC_GP22_Instance_t * Instance )
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_0_Resolve( TDC_GP22_Instance_t * Instance )
 {
     TDC_GP22_Status_t Status = TDC_GP22_Status_Success;
 
@@ -1649,7 +1642,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister0Resolve( TDC_GP22_Inst
     return Status;
 }
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister1Execute( TDC_GP22_Instance_t * Instance )
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_1_Execute( TDC_GP22_Instance_t * Instance )
 {
     TDC_GP22_Status_t Status = TDC_GP22_Status_Success;
 
@@ -1668,7 +1661,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister1Execute( TDC_GP22_Inst
         }
 
         Operation->Type = TDC_GP22_OperationType_CommitRegister1;
-        Operation->Handler = TDC_GP22_OperationCommitRegister1Resolve;
+        Operation->Handler = TDC_GP22_OperationCommitRegister_1_Resolve;
         Operation->Status = TDC_GP22_Status_Success;
         Operation->Timeout = TDC_GP22_Context.Timestamp;
 
@@ -1684,7 +1677,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister1Execute( TDC_GP22_Inst
     return Status;
 }
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister1Resolve( TDC_GP22_Instance_t * Instance )
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_1_Resolve( TDC_GP22_Instance_t * Instance )
 {
     TDC_GP22_Status_t Status = TDC_GP22_Status_Success;
 
@@ -1725,7 +1718,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister1Resolve( TDC_GP22_Inst
     return Status;
 }
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister2Execute( TDC_GP22_Instance_t * Instance )
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_2_Execute( TDC_GP22_Instance_t * Instance )
 {
     TDC_GP22_Status_t Status = TDC_GP22_Status_Success;
 
@@ -1744,7 +1737,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister2Execute( TDC_GP22_Inst
         }
 
         Operation->Type = TDC_GP22_OperationType_CommitRegister2;
-        Operation->Handler = TDC_GP22_OperationCommitRegister2Resolve;
+        Operation->Handler = TDC_GP22_OperationCommitRegister_2_Resolve;
         Operation->Status = TDC_GP22_Status_Success;
         Operation->Timeout = TDC_GP22_Context.Timestamp;
 
@@ -1760,7 +1753,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister2Execute( TDC_GP22_Inst
     return Status;
 }
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister2Resolve( TDC_GP22_Instance_t * Instance )
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_2_Resolve( TDC_GP22_Instance_t * Instance )
 {
     TDC_GP22_Status_t Status = TDC_GP22_Status_Success;
 
@@ -1801,7 +1794,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister2Resolve( TDC_GP22_Inst
     return Status;
 }
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister3Execute( TDC_GP22_Instance_t * Instance )
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_3_Execute( TDC_GP22_Instance_t * Instance )
 {
     TDC_GP22_Status_t Status = TDC_GP22_Status_Success;
 
@@ -1820,7 +1813,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister3Execute( TDC_GP22_Inst
         }
 
         Operation->Type = TDC_GP22_OperationType_CommitRegister3;
-        Operation->Handler = TDC_GP22_OperationCommitRegister3Resolve;
+        Operation->Handler = TDC_GP22_OperationCommitRegister_3_Resolve;
         Operation->Status = TDC_GP22_Status_Success;
         Operation->Timeout = TDC_GP22_Context.Timestamp;
 
@@ -1836,7 +1829,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister3Execute( TDC_GP22_Inst
     return Status;
 }
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister3Resolve( TDC_GP22_Instance_t * Instance )
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_3_Resolve( TDC_GP22_Instance_t * Instance )
 {
     TDC_GP22_Status_t Status = TDC_GP22_Status_Success;
 
@@ -1877,7 +1870,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister3Resolve( TDC_GP22_Inst
     return Status;
 }
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister4Execute( TDC_GP22_Instance_t * Instance )
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_4_Execute( TDC_GP22_Instance_t * Instance )
 {
     TDC_GP22_Status_t Status = TDC_GP22_Status_Success;
 
@@ -1896,7 +1889,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister4Execute( TDC_GP22_Inst
         }
 
         Operation->Type = TDC_GP22_OperationType_CommitRegister4;
-        Operation->Handler = TDC_GP22_OperationCommitRegister4Resolve;
+        Operation->Handler = TDC_GP22_OperationCommitRegister_4_Resolve;
         Operation->Status = TDC_GP22_Status_Success;
         Operation->Timeout = TDC_GP22_Context.Timestamp;
 
@@ -1912,7 +1905,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister4Execute( TDC_GP22_Inst
     return Status;
 }
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister4Resolve( TDC_GP22_Instance_t * Instance )
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_4_Resolve( TDC_GP22_Instance_t * Instance )
 {
     TDC_GP22_Status_t Status = TDC_GP22_Status_Success;
 
@@ -1953,7 +1946,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister4Resolve( TDC_GP22_Inst
     return Status;
 }
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister5Execute( TDC_GP22_Instance_t * Instance )
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_5_Execute( TDC_GP22_Instance_t * Instance )
 {
     TDC_GP22_Status_t Status = TDC_GP22_Status_Success;
 
@@ -1972,7 +1965,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister5Execute( TDC_GP22_Inst
         }
 
         Operation->Type = TDC_GP22_OperationType_CommitRegister5;
-        Operation->Handler = TDC_GP22_OperationCommitRegister5Resolve;
+        Operation->Handler = TDC_GP22_OperationCommitRegister_5_Resolve;
         Operation->Status = TDC_GP22_Status_Success;
         Operation->Timeout = TDC_GP22_Context.Timestamp;
 
@@ -1988,7 +1981,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister5Execute( TDC_GP22_Inst
     return Status;
 }
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister5Resolve( TDC_GP22_Instance_t * Instance )
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_5_Resolve( TDC_GP22_Instance_t * Instance )
 {
     TDC_GP22_Status_t Status = TDC_GP22_Status_Success;
 
@@ -2029,7 +2022,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister5Resolve( TDC_GP22_Inst
     return Status;
 }
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister6Execute( TDC_GP22_Instance_t * Instance )
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_6_Execute( TDC_GP22_Instance_t * Instance )
 {
     TDC_GP22_Status_t Status = TDC_GP22_Status_Success;
 
@@ -2048,7 +2041,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister6Execute( TDC_GP22_Inst
         }
 
         Operation->Type = TDC_GP22_OperationType_CommitRegister6;
-        Operation->Handler = TDC_GP22_OperationCommitRegister6Resolve;
+        Operation->Handler = TDC_GP22_OperationCommitRegister_6_Resolve;
         Operation->Status = TDC_GP22_Status_Success;
         Operation->Timeout = TDC_GP22_Context.Timestamp;
 
@@ -2064,7 +2057,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister6Execute( TDC_GP22_Inst
     return Status;
 }
 
-static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister6Resolve( TDC_GP22_Instance_t * Instance )
+static TDC_GP22_Status_t TDC_GP22_OperationCommitRegister_6_Resolve( TDC_GP22_Instance_t * Instance )
 {
     TDC_GP22_Status_t Status = TDC_GP22_Status_Success;
 
@@ -4277,7 +4270,7 @@ TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_6( TDC_GP22_Instance_t * Ins
 // #### Public Variable(s) #####################################################
 // #############################################################################
 
-const char TDC_GP22_VERSION[] = "0.0.0.v20260120-0211";
+const char TDC_GP22_VERSION[] = "0.0.0.v20260124-1234";
 
 // #############################################################################
 // #### File Guard #############################################################

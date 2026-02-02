@@ -472,6 +472,7 @@ typedef struct TDC_GP22_Process
 {
     TDC_GP22_ProcessType_t Type;       ///< Type
     TDC_GP22_ProcessHandler_t Handler; ///< Handler
+    TDC_GP22_Status_t Status;          ///< Status
     TDC_GP22_ProcessContext_t Context; ///< Context
 } TDC_GP22_Process_t;
 
@@ -533,7 +534,7 @@ typedef struct TDC_GP22_Context
 // #### Private Method(s) Prototype ############################################
 // #############################################################################
 
-static GPIO_Status_t GPIO_CallbackOnInterrupt( GPIO_t GPIOx, GPIO_ContextOnInterrupt_t Context );
+static GPIO_Status_t GPIO_CallbackOnInterrupt( GPIO_t GPIOx, GPIO_ContextOnInterrupt_t * Context );
 static SPI_Status_t SPI_CallbackOnComplete( SPI_t SPIx, SPI_Status_t Status );
 
 static TDC_GP22_Status_t TDC_GP22_Context_Initialize( void );
@@ -620,7 +621,7 @@ static TDC_GP22_Context_t TDC_GP22_Context;
 // #### Private Method(s) ######################################################
 // #############################################################################
 
-static GPIO_Status_t GPIO_CallbackOnInterrupt( GPIO_t GPIOx, GPIO_ContextOnInterrupt_t Context )
+static GPIO_Status_t GPIO_CallbackOnInterrupt( GPIO_t GPIOx, GPIO_ContextOnInterrupt_t * Context )
 {
     GPIO_Status_t GPIO_Status = GPIO_Status_Success;
 
@@ -756,37 +757,7 @@ static TDC_GP22_Status_t TDC_GP22_Instance_Initialize( TDC_GP22_Instance_t * Ins
         // TODO Enhance GPIOs Configuration
 
         GPIO_Status_t GPIO_Status = GPIO_Status_Success;
-        if ( ( GPIO_Status = GPIO_SetMode( Instance->Reset, GPIO_Mode_Output ) ) != GPIO_Status_Success )
-        {
-            Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        if ( ( GPIO_Status = GPIO_Commit( Instance->Reset ) ) != GPIO_Status_Success )
-        {
-            Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        if ( ( GPIO_Status = GPIO_SetMode( Instance->ChipSelect, GPIO_Mode_Output ) ) != GPIO_Status_Success )
-        {
-            Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        if ( ( GPIO_Status = GPIO_Commit( Instance->ChipSelect ) ) != GPIO_Status_Success )
-        {
-            Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        if ( ( GPIO_Status = GPIO_SetMode( Instance->Fire, GPIO_Mode_Output ) ) != GPIO_Status_Success )
-        {
-            Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        if ( ( GPIO_Status = GPIO_Commit( Instance->Fire ) ) != GPIO_Status_Success )
+        if ( ( GPIO_Status = GPIO_Write( Instance->PowerEnable, GPIO_Value_High ) ) != GPIO_Status_Success )
         {
             Status = TDC_GP22_Status_Error;
             break;
@@ -799,72 +770,6 @@ static TDC_GP22_Status_t TDC_GP22_Instance_Initialize( TDC_GP22_Instance_t * Ins
         }
 
         if ( ( GPIO_Status = GPIO_SetCallbackOnInterrupt( Instance->Interrupt, GPIO_CallbackOnInterrupt, Instance ) ) != GPIO_Status_Success )
-        {
-            Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        if ( ( GPIO_Status = GPIO_Commit( Instance->Interrupt ) ) != GPIO_Status_Success )
-        {
-            Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        if ( ( GPIO_Status = GPIO_SetMode( Instance->Start, GPIO_Mode_Output ) ) != GPIO_Status_Success )
-        {
-            Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        if ( ( GPIO_Status = GPIO_Commit( Instance->Start ) ) != GPIO_Status_Success )
-        {
-            Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        if ( ( GPIO_Status = GPIO_SetMode( Instance->StartEnable, GPIO_Mode_Output ) ) != GPIO_Status_Success )
-        {
-            Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        if ( ( GPIO_Status = GPIO_Commit( Instance->StartEnable ) ) != GPIO_Status_Success )
-        {
-            Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        if ( ( GPIO_Status = GPIO_SetMode( Instance->Stop_1_Enable, GPIO_Mode_Output ) ) != GPIO_Status_Success )
-        {
-            Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        if ( ( GPIO_Status = GPIO_Commit( Instance->Stop_1_Enable ) ) != GPIO_Status_Success )
-        {
-            Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        if ( ( GPIO_Status = GPIO_SetMode( Instance->Stop_2_Enable, GPIO_Mode_Output ) ) != GPIO_Status_Success )
-        {
-            Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        if ( ( GPIO_Status = GPIO_Commit( Instance->Stop_2_Enable ) ) != GPIO_Status_Success )
-        {
-            Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        if ( ( GPIO_Status = GPIO_SetMode( Instance->PowerEnable, GPIO_Mode_Output ) ) != GPIO_Status_Success )
-        {
-            Status = TDC_GP22_Status_Error;
-            break;
-        }
-
-        if ( ( GPIO_Status = GPIO_Commit( Instance->PowerEnable ) ) != GPIO_Status_Success )
         {
             Status = TDC_GP22_Status_Error;
             break;
@@ -1024,6 +929,7 @@ static TDC_GP22_Status_t TDC_GP22_SetProcess( TDC_GP22_Instance_t * Instance, TD
         }
 
         Process->Type = ProcessType;
+        Process->Status = TDC_GP22_Status_Success;
 
         Operation->Handler = NULL;
         Operation->Status = TDC_GP22_Status_Success;
@@ -1249,6 +1155,7 @@ static TDC_GP22_Status_t TDC_GP22_ProcessTimeOfFlightRestart( TDC_GP22_Instance_
 
         if ( Operation->Status != TDC_GP22_Status_Success )
         {
+            Process->Status = Operation->Status;
             Operation->Type = TDC_GP22_OperationType_None;
         }
 
@@ -1327,6 +1234,11 @@ static TDC_GP22_Status_t TDC_GP22_ProcessTimeOfFlightRestart( TDC_GP22_Instance_
                 break;
 
             case TDC_GP22_OperationType_StatusRead:
+                TDC_GP22_OperationalStatus_t * OperationalStatus = &Operation->Context.OperationalStatus;
+                if ( OperationalStatus->Timeout_TDC || OperationalStatus->Timeout_PreCounter )
+                {
+                    Process->Status = TDC_GP22_Status_Timeout;
+                }
                 Operation->Status = TDC_GP22_OperationMeasurement_0_Execute( Instance );
                 break;
 
@@ -1365,7 +1277,7 @@ static TDC_GP22_Status_t TDC_GP22_ProcessTimeOfFlightRestart( TDC_GP22_Instance_
             default:
                 if ( Instance->OnComplete != NULL )
                 {
-                    Instance->OnComplete( Instance, Operation->Status );
+                    Instance->OnComplete( Instance, Process->Status );
                 }
                 Status = TDC_GP22_SetProcess( Instance, TDC_GP22_ProcessType_None );
                 break;
@@ -2589,16 +2501,31 @@ static TDC_GP22_Status_t TDC_GP22_OperationStatusReadResolve( TDC_GP22_Instance_
             Context->Receive.Length -= UTIL_SizeOf( TDC_GP22_OpCode_t ) + UTIL_SizeOf( Context->StatusRegister );
             Context->Transmit.Length--;
 
-            Operation->Context.OperationalStatus.ALU_Operation_Pointer = Context->StatusRegister.ALU_OP_PTR;
-            Operation->Context.OperationalStatus.Channel1NumberOfHits = Context->StatusRegister.Number_of_Hits_Ch1;
-            Operation->Context.OperationalStatus.Channel2NumberOfHits = Context->StatusRegister.Number_of_Hits_Ch2;
-            Operation->Context.OperationalStatus.Timeout_TDC = Context->StatusRegister.Timeout_TDC;
-            Operation->Context.OperationalStatus.Timeout_PreCounter = Context->StatusRegister.Timeout_PreCounter;
-            Operation->Context.OperationalStatus.Temperature_Sensor_Open = Context->StatusRegister.Error_Open;
-            Operation->Context.OperationalStatus.Temperature_Sensor_Short = Context->StatusRegister.Error_Short;
-            Operation->Context.OperationalStatus.EEPROM_Error = Context->StatusRegister.EEPROM_Error;
-            Operation->Context.OperationalStatus.EEPROM_Multi_Error = Context->StatusRegister.EEPROM_DED;
-            Operation->Context.OperationalStatus.EEPROM_Matches_Configuration = Context->StatusRegister.EEPROM_EQ_CREG;
+            TDC_GP22_OperationalStatus_t * OperationalStatus = &Operation->Context.OperationalStatus;
+            OperationalStatus->ALU_Operation_Pointer = Context->StatusRegister.ALU_OP_PTR;
+            OperationalStatus->Channel1NumberOfHits = Context->StatusRegister.Number_of_Hits_Ch1;
+            OperationalStatus->Channel2NumberOfHits = Context->StatusRegister.Number_of_Hits_Ch2;
+            OperationalStatus->Timeout_TDC = Context->StatusRegister.Timeout_TDC;
+            OperationalStatus->Timeout_PreCounter = Context->StatusRegister.Timeout_PreCounter;
+            OperationalStatus->Temperature_Sensor_Open = Context->StatusRegister.Error_Open;
+            OperationalStatus->Temperature_Sensor_Short = Context->StatusRegister.Error_Short;
+            OperationalStatus->EEPROM_Error = Context->StatusRegister.EEPROM_Error;
+            OperationalStatus->EEPROM_Multi_Error = Context->StatusRegister.EEPROM_DED;
+            OperationalStatus->EEPROM_Matches_Configuration = Context->StatusRegister.EEPROM_EQ_CREG;
+
+            TDC_Debug( "" );
+            TDC_Debug( "Direction [%d] Status=%d", Operation->Context.FireDirection, Operation->Status );
+
+            TDC_Debug( "... ALU_Operation_Pointer=%d", OperationalStatus->ALU_Operation_Pointer );
+            TDC_Debug( "... Channel1NumberOfHits=%d", OperationalStatus->Channel1NumberOfHits );
+            TDC_Debug( "... Channel2NumberOfHits=%d", OperationalStatus->Channel2NumberOfHits );
+            TDC_Debug( "... Timeout_TDC=%d", OperationalStatus->Timeout_TDC );
+            TDC_Debug( "... Timeout_PreCounter=%d", OperationalStatus->Timeout_PreCounter );
+            TDC_Debug( "... Temperature_Sensor_Open=%d", OperationalStatus->Temperature_Sensor_Open );
+            TDC_Debug( "... Temperature_Sensor_Short=%d", OperationalStatus->Temperature_Sensor_Short );
+            TDC_Debug( "... EEPROM_Error=%d", OperationalStatus->EEPROM_Error );
+            TDC_Debug( "... EEPROM_Multi_Error=%d", OperationalStatus->EEPROM_Multi_Error );
+            TDC_Debug( "... EEPROM_Matches_Configuration=%d", OperationalStatus->EEPROM_Matches_Configuration );
 
             Operation->Status = TDC_GP22_Status_Success;
             Operation->Handler = NULL;
@@ -2680,7 +2607,12 @@ static TDC_GP22_Status_t TDC_GP22_OperationMeasurement_0_Resolve( TDC_GP22_Insta
 
             Operation->Context.Measurement_0 = UTIL_FixedToFloat( Context->Result_Register_0.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Context->ConfigurationRegister_0.DIV_CLKHS );
 
-            if ( Instance->OnMeasurement_0 != NULL )
+            TDC_GP22_OperationalStatus_t * OperationalStatus = &Operation->Context.OperationalStatus;
+            if ( OperationalStatus->Timeout_TDC || OperationalStatus->Timeout_PreCounter )
+            {
+                // Nothing to do
+            }
+            else if ( Instance->OnMeasurement_0 != NULL )
             {
                 Instance->OnMeasurement_0( Instance, Operation->Context.FireDirection, Operation->Context.Measurement_0 );
             }
@@ -2765,7 +2697,12 @@ static TDC_GP22_Status_t TDC_GP22_OperationMeasurement_1_Resolve( TDC_GP22_Insta
 
             Operation->Context.Measurement_1 = UTIL_FixedToFloat( Context->Result_Register_1.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Context->ConfigurationRegister_0.DIV_CLKHS );
 
-            if ( Instance->OnMeasurement_1 != NULL )
+            TDC_GP22_OperationalStatus_t * OperationalStatus = &Operation->Context.OperationalStatus;
+            if ( OperationalStatus->Timeout_TDC || OperationalStatus->Timeout_PreCounter )
+            {
+                // Nothing to do
+            }
+            else if ( Instance->OnMeasurement_1 != NULL )
             {
                 Instance->OnMeasurement_1( Instance, Operation->Context.FireDirection, Operation->Context.Measurement_1 );
             }
@@ -2850,7 +2787,12 @@ static TDC_GP22_Status_t TDC_GP22_OperationMeasurement_2_Resolve( TDC_GP22_Insta
 
             Operation->Context.Measurement_2 = UTIL_FixedToFloat( Context->Result_Register_2.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Context->ConfigurationRegister_0.DIV_CLKHS );
 
-            if ( Instance->OnMeasurement_2 != NULL )
+            TDC_GP22_OperationalStatus_t * OperationalStatus = &Operation->Context.OperationalStatus;
+            if ( OperationalStatus->Timeout_TDC || OperationalStatus->Timeout_PreCounter )
+            {
+                // Nothing to do
+            }
+            else if ( Instance->OnMeasurement_2 != NULL )
             {
                 Instance->OnMeasurement_2( Instance, Operation->Context.FireDirection, Operation->Context.Measurement_2 );
             }
@@ -2935,7 +2877,12 @@ static TDC_GP22_Status_t TDC_GP22_OperationMeasurement_3_Resolve( TDC_GP22_Insta
 
             Operation->Context.Measurement_3 = UTIL_FixedToFloat( Context->Result_Register_3.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Context->ConfigurationRegister_0.DIV_CLKHS );
 
-            if ( Instance->OnMeasurement_3 != NULL )
+            TDC_GP22_OperationalStatus_t * OperationalStatus = &Operation->Context.OperationalStatus;
+            if ( OperationalStatus->Timeout_TDC || OperationalStatus->Timeout_PreCounter )
+            {
+                // Nothing to do
+            }
+            else if ( Instance->OnMeasurement_3 != NULL )
             {
                 Instance->OnMeasurement_3( Instance, Operation->Context.FireDirection, Operation->Context.Measurement_3 );
             }
@@ -4883,7 +4830,7 @@ TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_6( TDC_GP22_Instance_t * Ins
 // #### Public Variable(s) #####################################################
 // #############################################################################
 
-const char TDC_GP22_VERSION[] = "0.0.0.v20260124-1653";
+const char TDC_GP22_VERSION[] = "0.0.0.v20260202-1914";
 
 // #############################################################################
 // #### File Guard #############################################################

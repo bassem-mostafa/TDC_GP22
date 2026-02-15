@@ -2605,7 +2605,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationMeasurement_0_Resolve( TDC_GP22_Insta
             Context->Receive.Length -= UTIL_SizeOf( TDC_GP22_OpCode_t ) + UTIL_SizeOf( Context->Result_Register_0 );
             Context->Transmit.Length--;
 
-            Operation->Context.Measurement_0 = UTIL_FixedToFloat( Context->Result_Register_0.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Context->ConfigurationRegister_0.DIV_CLKHS );
+            Operation->Context.Measurement_0 = UTIL_FixedToDouble( Context->Result_Register_0.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Context->ConfigurationRegister_0.DIV_CLKHS );
 
             TDC_GP22_OperationalStatus_t * OperationalStatus = &Operation->Context.OperationalStatus;
             if ( OperationalStatus->Timeout_TDC || OperationalStatus->Timeout_PreCounter )
@@ -2695,7 +2695,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationMeasurement_1_Resolve( TDC_GP22_Insta
             Context->Receive.Length -= UTIL_SizeOf( TDC_GP22_OpCode_t ) + UTIL_SizeOf( Context->Result_Register_1 );
             Context->Transmit.Length--;
 
-            Operation->Context.Measurement_1 = UTIL_FixedToFloat( Context->Result_Register_1.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Context->ConfigurationRegister_0.DIV_CLKHS );
+            Operation->Context.Measurement_1 = UTIL_FixedToDouble( Context->Result_Register_1.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Context->ConfigurationRegister_0.DIV_CLKHS );
 
             TDC_GP22_OperationalStatus_t * OperationalStatus = &Operation->Context.OperationalStatus;
             if ( OperationalStatus->Timeout_TDC || OperationalStatus->Timeout_PreCounter )
@@ -2785,7 +2785,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationMeasurement_2_Resolve( TDC_GP22_Insta
             Context->Receive.Length -= UTIL_SizeOf( TDC_GP22_OpCode_t ) + UTIL_SizeOf( Context->Result_Register_2 );
             Context->Transmit.Length--;
 
-            Operation->Context.Measurement_2 = UTIL_FixedToFloat( Context->Result_Register_2.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Context->ConfigurationRegister_0.DIV_CLKHS );
+            Operation->Context.Measurement_2 = UTIL_FixedToDouble( Context->Result_Register_2.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Context->ConfigurationRegister_0.DIV_CLKHS );
 
             TDC_GP22_OperationalStatus_t * OperationalStatus = &Operation->Context.OperationalStatus;
             if ( OperationalStatus->Timeout_TDC || OperationalStatus->Timeout_PreCounter )
@@ -2875,7 +2875,7 @@ static TDC_GP22_Status_t TDC_GP22_OperationMeasurement_3_Resolve( TDC_GP22_Insta
             Context->Receive.Length -= UTIL_SizeOf( TDC_GP22_OpCode_t ) + UTIL_SizeOf( Context->Result_Register_3 );
             Context->Transmit.Length--;
 
-            Operation->Context.Measurement_3 = UTIL_FixedToFloat( Context->Result_Register_3.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Context->ConfigurationRegister_0.DIV_CLKHS );
+            Operation->Context.Measurement_3 = UTIL_FixedToDouble( Context->Result_Register_3.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Context->ConfigurationRegister_0.DIV_CLKHS );
 
             TDC_GP22_OperationalStatus_t * OperationalStatus = &Operation->Context.OperationalStatus;
             if ( OperationalStatus->Timeout_TDC || OperationalStatus->Timeout_PreCounter )
@@ -2992,6 +2992,26 @@ TDC_GP22_Status_t TDC_GP22_DeInitialize( TDC_GP22_Instance_t * Instance )
         {
             break;
         }
+    }
+    while ( 0 );
+
+    return Status;
+}
+
+TDC_GP22_Status_t TDC_GP22_SetChannel1DelayValue_nsec( TDC_GP22_Instance_t * Instance, TDC_GP22_DelayValue_nsec_t DelayValue_nsec )
+{
+    TDC_GP22_Status_t Status = TDC_GP22_Status_Success;
+    TDC_GP22_Channel1DelayValue_t Channel1DelayValue = 0;
+
+    do
+    {
+        TDC_Trace( "%s( Instance=%p, Delay=%.3f )", __FUNCTION__, Instance, DelayValue_nsec );
+
+        TDC_GP22_Instance_Context_t * Context = Instance->Context;
+
+        Channel1DelayValue = UTIL_DoubleToFixed( DelayValue_nsec * Context->ConfigurationRegister_0.DIV_FIRE, 5 /* Fixed point conversion DELVAL1: 14 integer, and **5** fraction */ );
+
+        Status = TDC_GP22_SetChannel1DelayValue( Instance, Channel1DelayValue );
     }
     while ( 0 );
 
@@ -4157,7 +4177,7 @@ TDC_GP22_Status_t TDC_GP22_GetMeasurement_0( TDC_GP22_Instance_t * Instance, TDC
         {
             break;
         }
-        *Measurement = UTIL_FixedToFloat( Result_Register_0.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Instance->Context->ConfigurationRegister_0.DIV_CLKHS );
+        *Measurement = UTIL_FixedToDouble( Result_Register_0.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Instance->Context->ConfigurationRegister_0.DIV_CLKHS );
     }
     while ( 0 );
     return Status;
@@ -4180,7 +4200,7 @@ TDC_GP22_Status_t TDC_GP22_GetMeasurement_1( TDC_GP22_Instance_t * Instance, TDC
         {
             break;
         }
-        *Measurement = UTIL_FixedToFloat( Result_Register_1.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Instance->Context->ConfigurationRegister_0.DIV_CLKHS );
+        *Measurement = UTIL_FixedToDouble( Result_Register_1.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Instance->Context->ConfigurationRegister_0.DIV_CLKHS );
     }
     while ( 0 );
     return Status;
@@ -4203,7 +4223,7 @@ TDC_GP22_Status_t TDC_GP22_GetMeasurement_2( TDC_GP22_Instance_t * Instance, TDC
         {
             break;
         }
-        *Measurement = UTIL_FixedToFloat( Result_Register_2.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Instance->Context->ConfigurationRegister_0.DIV_CLKHS );
+        *Measurement = UTIL_FixedToDouble( Result_Register_2.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Instance->Context->ConfigurationRegister_0.DIV_CLKHS );
     }
     while ( 0 );
     return Status;
@@ -4226,7 +4246,7 @@ TDC_GP22_Status_t TDC_GP22_GetMeasurement_3( TDC_GP22_Instance_t * Instance, TDC
         {
             break;
         }
-        *Measurement = UTIL_FixedToFloat( Result_Register_3.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Instance->Context->ConfigurationRegister_0.DIV_CLKHS );
+        *Measurement = UTIL_FixedToDouble( Result_Register_3.Value, 16 ) * TDC_GP22_TREF * ( 0x01 << Instance->Context->ConfigurationRegister_0.DIV_CLKHS );
     }
     while ( 0 );
     return Status;
@@ -4286,7 +4306,7 @@ TDC_GP22_Status_t TDC_GP22_GetPulseWidthRatio( TDC_GP22_Instance_t * Instance, T
         {
             break;
         }
-        *PulseWidthRatio = UTIL_FixedToFloat( PW1ST_Register.Value, 7 );
+        *PulseWidthRatio = UTIL_FixedToDouble( PW1ST_Register.Value, 7 );
     }
     while ( 0 );
     return Status;
@@ -4830,7 +4850,7 @@ TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_6( TDC_GP22_Instance_t * Ins
 // #### Public Variable(s) #####################################################
 // #############################################################################
 
-const char TDC_GP22_VERSION[] = "0.0.0.v20260202-1914";
+const char TDC_GP22_VERSION[] = "0.0.0.v20260215-1836";
 
 // #############################################################################
 // #### File Guard #############################################################

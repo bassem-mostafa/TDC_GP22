@@ -92,6 +92,11 @@ extern "C"
     } TDC_GP22_Status_t;
 
     /**
+     *  @brief TDC GP22 Delay Value In Nano-Seconds
+     */
+    typedef double TDC_GP22_DelayValue_nsec_t;
+
+    /**
      *  @brief TDC GP22 Fire Pulses Type
      *
      *  @enum TDC_GP22_FirePulses_t
@@ -1074,6 +1079,8 @@ extern "C"
     TDC_GP22_Status_t TDC_GP22_Initialize( TDC_GP22_Instance_t * Instance );
     TDC_GP22_Status_t TDC_GP22_Cycle( TDC_GP22_Instance_t * Instance );
     TDC_GP22_Status_t TDC_GP22_DeInitialize( TDC_GP22_Instance_t * Instance );
+
+    TDC_GP22_Status_t TDC_GP22_SetChannel1DelayValue_nsec( TDC_GP22_Instance_t * Instance, TDC_GP22_DelayValue_nsec_t DelayValue_nsec );
 
     TDC_GP22_Status_t TDC_GP22_SetFireNumberOfPulses( TDC_GP22_Instance_t * Instance, TDC_GP22_FirePulses_t FirePulses );
     TDC_GP22_Status_t TDC_GP22_SetFireDivider( TDC_GP22_Instance_t * Instance, TDC_GP22_FireDivider_t FireDivider );

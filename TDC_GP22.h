@@ -1044,7 +1044,7 @@ extern "C"
 
     typedef uint8_t TDC_GP22_ID_t[ 7 ];
 
-    typedef struct TDC_GP22_Instance_Context TDC_GP22_Instance_Context_t;
+    typedef struct TDC_GP22_InstanceContext TDC_GP22_InstanceContext_t;
 
     typedef struct TDC_GP22_Instance
     {
@@ -1069,7 +1069,7 @@ extern "C"
         TDC_GP22_CallbackOnMeasurement_3_t OnMeasurement_3;
 
         // Managed Internally
-        TDC_GP22_Instance_Context_t * Context;
+        TDC_GP22_InstanceContext_t * Context;
     } TDC_GP22_Instance_t;
 
     // #############################################################################

@@ -3009,7 +3009,7 @@ TDC_GP22_Status_t TDC_GP22_SetChannel1DelayValue_nsec( TDC_GP22_Instance_t * Ins
 
         TDC_GP22_InstanceContext_t * Context = Instance->Context;
 
-        Channel1DelayValue = UTIL_DoubleToFixed( DelayValue_nsec * Context->ConfigurationRegister_0.DIV_FIRE, 5 /* Fixed point conversion DELVAL1: 14 integer, and **5** fraction */ );
+        Channel1DelayValue = UTIL_DoubleToFixed( DelayValue_nsec * ( Context->ConfigurationRegister_0.DIV_FIRE + 1 ), 5 /* Fixed point conversion DELVAL1: 14 integer, and **5** fraction */ );
 
         Status = TDC_GP22_SetChannel1DelayValue( Instance, Channel1DelayValue );
     }
@@ -4850,7 +4850,7 @@ TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_6( TDC_GP22_Instance_t * Ins
 // #### Public Variable(s) #####################################################
 // #############################################################################
 
-const char TDC_GP22_VERSION[] = "0.0.0.v20260412-1852";
+const char TDC_GP22_VERSION[] = "0.0.0.v20260517-1631";
 
 // #############################################################################
 // #### File Guard #############################################################

@@ -534,7 +534,7 @@ typedef struct TDC_GP22_Context
 // #### Private Method(s) Prototype ############################################
 // #############################################################################
 
-static GPIO_Status_t GPIO_CallbackOnInterrupt( GPIO_t GPIOx, GPIO_ContextOnInterrupt_t * Context );
+static GPIO_Status_t GPIO_CallbackOnInterrupt( GPIO_t GPIOx, GPIO_CallbackContext_t * Context );
 static SPI_Status_t SPI_CallbackOnComplete( SPI_t SPIx, SPI_Status_t Status );
 
 static TDC_GP22_Status_t TDC_GP22_Context_Initialize( void );
@@ -621,7 +621,7 @@ static TDC_GP22_Context_t TDC_GP22_Context;
 // #### Private Method(s) ######################################################
 // #############################################################################
 
-static GPIO_Status_t GPIO_CallbackOnInterrupt( GPIO_t GPIOx, GPIO_ContextOnInterrupt_t * Context )
+static GPIO_Status_t GPIO_CallbackOnInterrupt( GPIO_t GPIOx, GPIO_CallbackContext_t * Context )
 {
     GPIO_Status_t GPIO_Status = GPIO_Status_Success;
 
@@ -763,13 +763,18 @@ static TDC_GP22_Status_t TDC_GP22_Instance_Initialize( TDC_GP22_Instance_t * Ins
             break;
         }
 
-        if ( ( GPIO_Status = GPIO_SetMode( Instance->Interrupt, GPIO_Mode_InterruptFalling ) ) != GPIO_Status_Success )
+        if ( ( GPIO_Status = GPIO_Configure( Instance->Interrupt, ( GPIO_Configuration_t ) {
+                                                                      .Mode = GPIO_Mode_InterruptFalling,
+                                                                      .Function = GPIO_Function_Default,
+                                                                      .Pull = GPIO_Pull_None,
+                                                                  } ) )
+             != GPIO_Status_Success )
         {
             Status = TDC_GP22_Status_Error;
             break;
         }
 
-        if ( ( GPIO_Status = GPIO_SetCallbackOnInterrupt( Instance->Interrupt, GPIO_CallbackOnInterrupt, Instance ) ) != GPIO_Status_Success )
+        if ( ( GPIO_Status = GPIO_SetOnInterrupt( Instance->Interrupt, ( GPIO_OnInterrupt_t ) { .Callback = GPIO_CallbackOnInterrupt, .Context = Instance } ) ) != GPIO_Status_Success )
         {
             Status = TDC_GP22_Status_Error;
             break;
@@ -4850,7 +4855,7 @@ TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_6( TDC_GP22_Instance_t * Ins
 // #### Public Variable(s) #####################################################
 // #############################################################################
 
-const char TDC_GP22_VERSION[] = "0.0.0.v20260517-1631";
+const char TDC_GP22_VERSION[] = "0.0.0.v20260523-1800";
 
 // #############################################################################
 // #### File Guard #############################################################

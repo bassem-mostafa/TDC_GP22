@@ -1028,155 +1028,188 @@ extern "C"
 
     typedef double TDC_GP22_Measurement_t;
 
-    typedef struct TDC_GP22_Instance TDC_GP22_Instance_t;
-
-    typedef void ( *TDC_GP22_CallbackOnComplete_t )( TDC_GP22_Instance_t * Instance, TDC_GP22_Status_t Status );
-
-    typedef void ( *TDC_GP22_CallbackOnMeasurement_0_t )( TDC_GP22_Instance_t * Instance, TDC_GP22_FireDirection_t FireDirection, TDC_GP22_Measurement_t Measurement );
-
-    typedef void ( *TDC_GP22_CallbackOnMeasurement_1_t )( TDC_GP22_Instance_t * Instance, TDC_GP22_FireDirection_t FireDirection, TDC_GP22_Measurement_t Measurement );
-
-    typedef void ( *TDC_GP22_CallbackOnMeasurement_2_t )( TDC_GP22_Instance_t * Instance, TDC_GP22_FireDirection_t FireDirection, TDC_GP22_Measurement_t Measurement );
-
-    typedef void ( *TDC_GP22_CallbackOnMeasurement_3_t )( TDC_GP22_Instance_t * Instance, TDC_GP22_FireDirection_t FireDirection, TDC_GP22_Measurement_t Measurement );
-
     typedef double TDC_GP22_PulseWidthRatio_t;
 
     typedef uint8_t TDC_GP22_ID_t[ 7 ];
 
-    typedef struct TDC_GP22_InstanceContext TDC_GP22_InstanceContext_t;
+    /**
+     *  @brief TDC GP22 Callback Context
+     */
+    typedef void TDC_GP22_CallbackContext_t;
 
-    typedef struct TDC_GP22_Instance
+    /**
+     *  @brief TDC GP22 Callback On Measurement
+     */
+    typedef TDC_GP22_Status_t( TDC_GP22_CallbackOnMeasurement_t )( TDC_GP22_t GP22x, TDC_GP22_FireDirection_t FireDirection, TDC_GP22_Measurement_t Measurement, TDC_GP22_CallbackContext_t * CallbackContext );
+
+    /**
+     *  @brief TDC GP22 Callback On Complete
+     */
+    typedef TDC_GP22_Status_t( TDC_GP22_CallbackOnComplete_t )( TDC_GP22_t GP22x, TDC_GP22_Status_t Status, TDC_GP22_CallbackContext_t * CallbackContext );
+
+    /**
+     *  @brief TDC GP22 On Measurement Configuration
+     *
+     *  @struct TDC_OnInterrupt_t
+     */
+    typedef struct TDC_GP22_OnMeasurement
     {
-        TDC_GP22_t GP22x; // FIXME This attribute depends on a port type!!, drivers must be self-contained
+        TDC_GP22_CallbackOnMeasurement_t * Callback;
+        TDC_GP22_CallbackContext_t * Context;
+    } TDC_GP22_OnMeasurement_t;
 
-        SPI_t SPIx;
-        GPIO_t Reset;
-        GPIO_t ChipSelect;
-        GPIO_t Fire;
-        GPIO_t Interrupt;
-        GPIO_t Start;
-        GPIO_t StartEnable;
-        GPIO_t Stop_1_Enable;
-        GPIO_t Stop_2_Enable;
-        GPIO_t PowerEnable;
+    /**
+     *  @brief TDC GP22 On Complete Configuration
+     *
+     *  @struct TDC_OnInterrupt_t
+     */
+    typedef struct TDC_GP22_OnComplete
+    {
+        TDC_GP22_CallbackOnComplete_t * Callback;
+        TDC_GP22_CallbackContext_t * Context;
+    } TDC_GP22_OnComplete_t;
 
-        TDC_GP22_CallbackOnComplete_t OnComplete;
-
-        TDC_GP22_CallbackOnMeasurement_0_t OnMeasurement_0;
-        TDC_GP22_CallbackOnMeasurement_1_t OnMeasurement_1;
-        TDC_GP22_CallbackOnMeasurement_2_t OnMeasurement_2;
-        TDC_GP22_CallbackOnMeasurement_3_t OnMeasurement_3;
-
-        // Managed Internally
-        TDC_GP22_InstanceContext_t * Context;
-    } TDC_GP22_Instance_t;
+    /**
+     *  @brief TDC GP22 Interface
+     *
+     *  @struct TDC_GP22_Interface_t
+     */
+    typedef struct TDC_GP22_Interface
+    {
+        SPI_t SPIx;           ///<
+        GPIO_t ChipSelect;    ///<
+        GPIO_t Reset;         ///<
+        GPIO_t Interrupt;     ///<
+        GPIO_t Fire;          ///<
+        GPIO_t Start;         ///<
+        GPIO_t StartEnable;   ///<
+        GPIO_t Stop_1_Enable; ///<
+        GPIO_t Stop_2_Enable; ///<
+        GPIO_t PowerEnable;   ///<
+    } TDC_GP22_Interface_t;
 
     // #############################################################################
     // #### Public Method(s) #######################################################
     // #############################################################################
 
-    TDC_GP22_Status_t TDC_GP22_Initialize( TDC_GP22_Instance_t * Instance );
-    TDC_GP22_Status_t TDC_GP22_Cycle( TDC_GP22_Instance_t * Instance );
-    TDC_GP22_Status_t TDC_GP22_DeInitialize( TDC_GP22_Instance_t * Instance );
+    /**
+     *  @brief Binds Instance of TDC GP22 to interface
+     *
+     *  @param[in] GP22x     Instance
+     *  @param[in] Interface Connection Interface
+     *
+     *  @return TDC_GP22_Status_t
+     */
+    TDC_GP22_Status_t TDC_GP22_Bind( TDC_GP22_t GP22x, TDC_GP22_Interface_t Interface );
 
-    TDC_GP22_Status_t TDC_GP22_SetChannel1DelayValue_nsec( TDC_GP22_Instance_t * Instance, TDC_GP22_DelayValue_nsec_t DelayValue_nsec );
+    TDC_GP22_Status_t TDC_GP22_Initialize( TDC_GP22_t GP22x );
+    TDC_GP22_Status_t TDC_GP22_Cycle( TDC_GP22_t GP22x );
+    TDC_GP22_Status_t TDC_GP22_DeInitialize( TDC_GP22_t GP22x );
 
-    TDC_GP22_Status_t TDC_GP22_SetFireNumberOfPulses( TDC_GP22_Instance_t * Instance, TDC_GP22_FirePulses_t FirePulses );
-    TDC_GP22_Status_t TDC_GP22_SetFireDivider( TDC_GP22_Instance_t * Instance, TDC_GP22_FireDivider_t FireDivider );
-    TDC_GP22_Status_t TDC_GP22_SetCalibrationNumberOfPeriods( TDC_GP22_Instance_t * Instance, TDC_GP22_CalibrationPeriod_t CalibrationPeriod );
-    TDC_GP22_Status_t TDC_GP22_SetOscillatorDivider( TDC_GP22_Instance_t * Instance, TDC_GP22_OscillatorDivider_t OscillatorDivider );
-    TDC_GP22_Status_t TDC_GP22_SetOscillatorInterval( TDC_GP22_Instance_t * Instance, TDC_GP22_OscillatorInterval_t OscillatorInterval );
-    TDC_GP22_Status_t TDC_GP22_SetTemperaturePorts( TDC_GP22_Instance_t * Instance, TDC_GP22_TemperaturePorts_t TemperaturePorts );
-    TDC_GP22_Status_t TDC_GP22_SetTemperatureInterval( TDC_GP22_Instance_t * Instance, TDC_GP22_TemperatureInterval_t TemperatureInterval );
-    TDC_GP22_Status_t TDC_GP22_SetTemperatureDummyInterval( TDC_GP22_Instance_t * Instance, TDC_GP22_TemperatureDummyInterval_t TemperatureDummyInterval );
-    TDC_GP22_Status_t TDC_GP22_SetTemperatureClockSource( TDC_GP22_Instance_t * Instance, TDC_GP22_TemperatureClockSource_t TemperatureClockSource );
-    TDC_GP22_Status_t TDC_GP22_SetCalibration( TDC_GP22_Instance_t * Instance, TDC_GP22_Calibration_t Calibration );
-    TDC_GP22_Status_t TDC_GP22_SetCalibrationAuto( TDC_GP22_Instance_t * Instance, TDC_GP22_AutoCalibration_t AutoCalibration );
-    TDC_GP22_Status_t TDC_GP22_SetMode( TDC_GP22_Instance_t * Instance, TDC_GP22_Mode_t Mode );
-    TDC_GP22_Status_t TDC_GP22_SetStop2SignalMode( TDC_GP22_Instance_t * Instance, TDC_GP22_Stop2SignalMode_t Stop2SignalMode );
-    TDC_GP22_Status_t TDC_GP22_SetStop1SignalMode( TDC_GP22_Instance_t * Instance, TDC_GP22_Stop1SignalMode_t Stop1SignalMode );
-    TDC_GP22_Status_t TDC_GP22_SetStartSignalMode( TDC_GP22_Instance_t * Instance, TDC_GP22_StartSignalMode_t StartSignalMode );
+    TDC_GP22_Status_t TDC_GP22_SetChannel1DelayValue_nsec( TDC_GP22_t GP22x, TDC_GP22_DelayValue_nsec_t DelayValue_nsec );
 
-    TDC_GP22_Status_t TDC_GP22_SetHIT_2_Operator( TDC_GP22_Instance_t * Instance, TDC_GP22_HIT_2_Operator_t HIT_2_Operator );
-    TDC_GP22_Status_t TDC_GP22_SetHIT_1_Operator( TDC_GP22_Instance_t * Instance, TDC_GP22_HIT_1_Operator_t HIT_1_Operator );
-    TDC_GP22_Status_t TDC_GP22_SetFastInit( TDC_GP22_Instance_t * Instance, TDC_GP22_FastInit_t FastInit );
-    TDC_GP22_Status_t TDC_GP22_SetChannel2Hits( TDC_GP22_Instance_t * Instance, TDC_GP22_Channel2Hits_t Channel2Hits );
-    TDC_GP22_Status_t TDC_GP22_SetChannel1Hits( TDC_GP22_Instance_t * Instance, TDC_GP22_Channel1Hits_t Channel1Hits );
-    TDC_GP22_Status_t TDC_GP22_SetCurrentMode( TDC_GP22_Instance_t * Instance, TDC_GP22_CurrentMode_t CurrentMode );
-    TDC_GP22_Status_t TDC_GP22_SetStartFire( TDC_GP22_Instance_t * Instance, TDC_GP22_StartFire_t StartFire );
-    TDC_GP22_Status_t TDC_GP22_SetStartEnable( TDC_GP22_Instance_t * Instance, TDC_GP22_StartEnable_t StartEnable );
-    TDC_GP22_Status_t TDC_GP22_SetFireInput( TDC_GP22_Instance_t * Instance, TDC_GP22_FireInput_t FireInput );
+    TDC_GP22_Status_t TDC_GP22_SetFireNumberOfPulses( TDC_GP22_t GP22x, TDC_GP22_FirePulses_t FirePulses );
+    TDC_GP22_Status_t TDC_GP22_SetFireDivider( TDC_GP22_t GP22x, TDC_GP22_FireDivider_t FireDivider );
+    TDC_GP22_Status_t TDC_GP22_SetCalibrationNumberOfPeriods( TDC_GP22_t GP22x, TDC_GP22_CalibrationPeriod_t CalibrationPeriod );
+    TDC_GP22_Status_t TDC_GP22_SetOscillatorDivider( TDC_GP22_t GP22x, TDC_GP22_OscillatorDivider_t OscillatorDivider );
+    TDC_GP22_Status_t TDC_GP22_SetOscillatorInterval( TDC_GP22_t GP22x, TDC_GP22_OscillatorInterval_t OscillatorInterval );
+    TDC_GP22_Status_t TDC_GP22_SetTemperaturePorts( TDC_GP22_t GP22x, TDC_GP22_TemperaturePorts_t TemperaturePorts );
+    TDC_GP22_Status_t TDC_GP22_SetTemperatureInterval( TDC_GP22_t GP22x, TDC_GP22_TemperatureInterval_t TemperatureInterval );
+    TDC_GP22_Status_t TDC_GP22_SetTemperatureDummyInterval( TDC_GP22_t GP22x, TDC_GP22_TemperatureDummyInterval_t TemperatureDummyInterval );
+    TDC_GP22_Status_t TDC_GP22_SetTemperatureClockSource( TDC_GP22_t GP22x, TDC_GP22_TemperatureClockSource_t TemperatureClockSource );
+    TDC_GP22_Status_t TDC_GP22_SetCalibration( TDC_GP22_t GP22x, TDC_GP22_Calibration_t Calibration );
+    TDC_GP22_Status_t TDC_GP22_SetCalibrationAuto( TDC_GP22_t GP22x, TDC_GP22_AutoCalibration_t AutoCalibration );
+    TDC_GP22_Status_t TDC_GP22_SetMode( TDC_GP22_t GP22x, TDC_GP22_Mode_t Mode );
+    TDC_GP22_Status_t TDC_GP22_SetStop2SignalMode( TDC_GP22_t GP22x, TDC_GP22_Stop2SignalMode_t Stop2SignalMode );
+    TDC_GP22_Status_t TDC_GP22_SetStop1SignalMode( TDC_GP22_t GP22x, TDC_GP22_Stop1SignalMode_t Stop1SignalMode );
+    TDC_GP22_Status_t TDC_GP22_SetStartSignalMode( TDC_GP22_t GP22x, TDC_GP22_StartSignalMode_t StartSignalMode );
 
-    TDC_GP22_Status_t TDC_GP22_SetInterruptEnable( TDC_GP22_Instance_t * Instance, TDC_GP22_InterruptEnable_t InterruptEnable );
-    TDC_GP22_Status_t TDC_GP22_SetChannel2SenseEdge( TDC_GP22_Instance_t * Instance, TDC_GP22_Channel2SenseEdge_t Channel2SenseEdge );
-    TDC_GP22_Status_t TDC_GP22_SetChannel1SenseEdge( TDC_GP22_Instance_t * Instance, TDC_GP22_Channel1SenseEdge_t Channel1SenseEdge );
-    TDC_GP22_Status_t TDC_GP22_SetChannel1DelayValue( TDC_GP22_Instance_t * Instance, TDC_GP22_Channel1DelayValue_t Channel1DelayValue );
+    TDC_GP22_Status_t TDC_GP22_SetHIT_2_Operator( TDC_GP22_t GP22x, TDC_GP22_HIT_2_Operator_t HIT_2_Operator );
+    TDC_GP22_Status_t TDC_GP22_SetHIT_1_Operator( TDC_GP22_t GP22x, TDC_GP22_HIT_1_Operator_t HIT_1_Operator );
+    TDC_GP22_Status_t TDC_GP22_SetFastInit( TDC_GP22_t GP22x, TDC_GP22_FastInit_t FastInit );
+    TDC_GP22_Status_t TDC_GP22_SetChannel2Hits( TDC_GP22_t GP22x, TDC_GP22_Channel2Hits_t Channel2Hits );
+    TDC_GP22_Status_t TDC_GP22_SetChannel1Hits( TDC_GP22_t GP22x, TDC_GP22_Channel1Hits_t Channel1Hits );
+    TDC_GP22_Status_t TDC_GP22_SetCurrentMode( TDC_GP22_t GP22x, TDC_GP22_CurrentMode_t CurrentMode );
+    TDC_GP22_Status_t TDC_GP22_SetStartFire( TDC_GP22_t GP22x, TDC_GP22_StartFire_t StartFire );
+    TDC_GP22_Status_t TDC_GP22_SetStartEnable( TDC_GP22_t GP22x, TDC_GP22_StartEnable_t StartEnable );
+    TDC_GP22_Status_t TDC_GP22_SetFireInput( TDC_GP22_t GP22x, TDC_GP22_FireInput_t FireInput );
 
-    TDC_GP22_Status_t TDC_GP22_SetAutomaticCalculation( TDC_GP22_Instance_t * Instance, TDC_GP22_AutomaticCalculation_t AutomaticCalculation );
-    TDC_GP22_Status_t TDC_GP22_SetErrorValue( TDC_GP22_Instance_t * Instance, TDC_GP22_ErrorValue_t ErrorValue );
-    TDC_GP22_Status_t TDC_GP22_SetFirstWave( TDC_GP22_Instance_t * Instance, TDC_GP22_FirstWave_t FirstWave );
-    TDC_GP22_Status_t TDC_GP22_SetTimeoutDivider( TDC_GP22_Instance_t * Instance, TDC_GP22_TimeoutDivider_t TimeoutDivider );
-    TDC_GP22_Status_t TDC_GP22_SetNumberOfPeriodsStop1( TDC_GP22_Instance_t * Instance, TDC_GP22_NumberOfPeriodsStop1_t NumberOfPeriodsStop1 );
-    TDC_GP22_Status_t TDC_GP22_SetNumberOfPeriodsStop2( TDC_GP22_Instance_t * Instance, TDC_GP22_NumberOfPeriodsStop2_t NumberOfPeriodsStop2 );
-    TDC_GP22_Status_t TDC_GP22_SetNumberOfPeriodsStop3( TDC_GP22_Instance_t * Instance, TDC_GP22_NumberOfPeriodsStop3_t NumberOfPeriodsStop3 );
-    TDC_GP22_Status_t TDC_GP22_SetChannel2DelayValue( TDC_GP22_Instance_t * Instance, TDC_GP22_Channel2DelayValue_t Channel2DelayValue );
+    TDC_GP22_Status_t TDC_GP22_SetInterruptEnable( TDC_GP22_t GP22x, TDC_GP22_InterruptEnable_t InterruptEnable );
+    TDC_GP22_Status_t TDC_GP22_SetChannel2SenseEdge( TDC_GP22_t GP22x, TDC_GP22_Channel2SenseEdge_t Channel2SenseEdge );
+    TDC_GP22_Status_t TDC_GP22_SetChannel1SenseEdge( TDC_GP22_t GP22x, TDC_GP22_Channel1SenseEdge_t Channel1SenseEdge );
+    TDC_GP22_Status_t TDC_GP22_SetChannel1DelayValue( TDC_GP22_t GP22x, TDC_GP22_Channel1DelayValue_t Channel1DelayValue );
 
-    TDC_GP22_Status_t TDC_GP22_SetChannel3DelayValue( TDC_GP22_Instance_t * Instance, TDC_GP22_Channel3DelayValue_t Channel3DelayValue );
-    TDC_GP22_Status_t TDC_GP22_SetPulseWidthMeasurement( TDC_GP22_Instance_t * Instance, TDC_GP22_PulseWidthMeasurement_t PulseWidthMeasurement );
-    TDC_GP22_Status_t TDC_GP22_SetFirstWaveEdge( TDC_GP22_Instance_t * Instance, TDC_GP22_FirstWaveEdge_t FirstWaveEdge );
-    TDC_GP22_Status_t TDC_GP22_SetAdditionalOffsetShiftPositive( TDC_GP22_Instance_t * Instance, TDC_GP22_AdditionalOffsetShiftPositive_t AdditionalOffsetShiftPositive );
-    TDC_GP22_Status_t TDC_GP22_SetAdditionalOffsetShiftNegative( TDC_GP22_Instance_t * Instance, TDC_GP22_AdditionalOffsetShiftNegative_t AdditionalOffsetShiftNegative );
-    TDC_GP22_Status_t TDC_GP22_SetOffsetShift( TDC_GP22_Instance_t * Instance, TDC_GP22_OffsetShift_t OffsetShift );
+    TDC_GP22_Status_t TDC_GP22_SetAutomaticCalculation( TDC_GP22_t GP22x, TDC_GP22_AutomaticCalculation_t AutomaticCalculation );
+    TDC_GP22_Status_t TDC_GP22_SetErrorValue( TDC_GP22_t GP22x, TDC_GP22_ErrorValue_t ErrorValue );
+    TDC_GP22_Status_t TDC_GP22_SetFirstWave( TDC_GP22_t GP22x, TDC_GP22_FirstWave_t FirstWave );
+    TDC_GP22_Status_t TDC_GP22_SetTimeoutDivider( TDC_GP22_t GP22x, TDC_GP22_TimeoutDivider_t TimeoutDivider );
+    TDC_GP22_Status_t TDC_GP22_SetNumberOfPeriodsStop1( TDC_GP22_t GP22x, TDC_GP22_NumberOfPeriodsStop1_t NumberOfPeriodsStop1 );
+    TDC_GP22_Status_t TDC_GP22_SetNumberOfPeriodsStop2( TDC_GP22_t GP22x, TDC_GP22_NumberOfPeriodsStop2_t NumberOfPeriodsStop2 );
+    TDC_GP22_Status_t TDC_GP22_SetNumberOfPeriodsStop3( TDC_GP22_t GP22x, TDC_GP22_NumberOfPeriodsStop3_t NumberOfPeriodsStop3 );
+    TDC_GP22_Status_t TDC_GP22_SetChannel2DelayValue( TDC_GP22_t GP22x, TDC_GP22_Channel2DelayValue_t Channel2DelayValue );
 
-    TDC_GP22_Status_t TDC_GP22_SetFireDirection( TDC_GP22_Instance_t * Instance, TDC_GP22_FireDirection_t FireDirection );
-    TDC_GP22_Status_t TDC_GP22_SetNoiseStart( TDC_GP22_Instance_t * Instance, TDC_GP22_NoiseStart_t NoiseStart );
-    TDC_GP22_Status_t TDC_GP22_SetPhaseShift( TDC_GP22_Instance_t * Instance, TDC_GP22_PhaseShift_t PhaseShift );
-    TDC_GP22_Status_t TDC_GP22_SetNumberOfPulseRepetition( TDC_GP22_Instance_t * Instance, TDC_GP22_NumberOfPulseRepetition_t NumberOfPulseRepetition );
-    TDC_GP22_Status_t TDC_GP22_SetPhaseInversion( TDC_GP22_Instance_t * Instance, TDC_GP22_PhaseInversionPulse_t TDC_GP22_PhaseInversionPulse, TDC_GP22_PhaseInversion_t PhaseInversion );
+    TDC_GP22_Status_t TDC_GP22_SetChannel3DelayValue( TDC_GP22_t GP22x, TDC_GP22_Channel3DelayValue_t Channel3DelayValue );
+    TDC_GP22_Status_t TDC_GP22_SetPulseWidthMeasurement( TDC_GP22_t GP22x, TDC_GP22_PulseWidthMeasurement_t PulseWidthMeasurement );
+    TDC_GP22_Status_t TDC_GP22_SetFirstWaveEdge( TDC_GP22_t GP22x, TDC_GP22_FirstWaveEdge_t FirstWaveEdge );
+    TDC_GP22_Status_t TDC_GP22_SetAdditionalOffsetShiftPositive( TDC_GP22_t GP22x, TDC_GP22_AdditionalOffsetShiftPositive_t AdditionalOffsetShiftPositive );
+    TDC_GP22_Status_t TDC_GP22_SetAdditionalOffsetShiftNegative( TDC_GP22_t GP22x, TDC_GP22_AdditionalOffsetShiftNegative_t AdditionalOffsetShiftNegative );
+    TDC_GP22_Status_t TDC_GP22_SetOffsetShift( TDC_GP22_t GP22x, TDC_GP22_OffsetShift_t OffsetShift );
 
-    TDC_GP22_Status_t TDC_GP22_SetAnalogEnable( TDC_GP22_Instance_t * Instance, TDC_GP22_AnalogEnable_t AnalogEnable );
-    TDC_GP22_Status_t TDC_GP22_SetTemperatureInput( TDC_GP22_Instance_t * Instance, TDC_GP22_TemperatureInput_t TemperatureInput );
-    TDC_GP22_Status_t TDC_GP22_SetComparatorOffset( TDC_GP22_Instance_t * Instance, TDC_GP22_ComparatorOffset_t ComparatorOffset );
-    TDC_GP22_Status_t TDC_GP22_SetChargeTime( TDC_GP22_Instance_t * Instance, TDC_GP22_ChargeTime_t ChargeTime );
-    TDC_GP22_Status_t TDC_GP22_SetTemperatureCycle( TDC_GP22_Instance_t * Instance, TDC_GP22_TemperatureCycle_t TemperatureCycle );
-    TDC_GP22_Status_t TDC_GP22_SetTimeOfFlightCycle( TDC_GP22_Instance_t * Instance, TDC_GP22_TimeOfFlightCycle_t TimeOfFlightCycle );
-    TDC_GP22_Status_t TDC_GP22_SetCycle( TDC_GP22_Instance_t * Instance, TDC_GP22_Cycle_t Cycle );
-    TDC_GP22_Status_t TDC_GP22_SetDefaultFireLevel( TDC_GP22_Instance_t * Instance, TDC_GP22_DefaultFireLevel_t DefaultFireLevel );
-    TDC_GP22_Status_t TDC_GP22_SetResolution( TDC_GP22_Instance_t * Instance, TDC_GP22_Resolution_t Resolution );
-    TDC_GP22_Status_t TDC_GP22_SetTemperatureMeasurementDirection( TDC_GP22_Instance_t * Instance, TDC_GP22_TemperatureMeasurementDirection_t TemperatureMeasurementDirection );
+    TDC_GP22_Status_t TDC_GP22_SetFireDirection( TDC_GP22_t GP22x, TDC_GP22_FireDirection_t FireDirection );
+    TDC_GP22_Status_t TDC_GP22_SetNoiseStart( TDC_GP22_t GP22x, TDC_GP22_NoiseStart_t NoiseStart );
+    TDC_GP22_Status_t TDC_GP22_SetPhaseShift( TDC_GP22_t GP22x, TDC_GP22_PhaseShift_t PhaseShift );
+    TDC_GP22_Status_t TDC_GP22_SetNumberOfPulseRepetition( TDC_GP22_t GP22x, TDC_GP22_NumberOfPulseRepetition_t NumberOfPulseRepetition );
+    TDC_GP22_Status_t TDC_GP22_SetPhaseInversion( TDC_GP22_t GP22x, TDC_GP22_PhaseInversionPulse_t TDC_GP22_PhaseInversionPulse, TDC_GP22_PhaseInversion_t PhaseInversion );
 
-    TDC_GP22_Status_t TDC_GP22_GetMeasurement_0( TDC_GP22_Instance_t * Instance, TDC_GP22_Measurement_t * Measurement );
-    TDC_GP22_Status_t TDC_GP22_GetMeasurement_1( TDC_GP22_Instance_t * Instance, TDC_GP22_Measurement_t * Measurement );
-    TDC_GP22_Status_t TDC_GP22_GetMeasurement_2( TDC_GP22_Instance_t * Instance, TDC_GP22_Measurement_t * Measurement );
-    TDC_GP22_Status_t TDC_GP22_GetMeasurement_3( TDC_GP22_Instance_t * Instance, TDC_GP22_Measurement_t * Measurement );
-    TDC_GP22_Status_t TDC_GP22_GetOperationalStatus( TDC_GP22_Instance_t * Instance, TDC_GP22_OperationalStatus_t * OperationalStatus );
-    TDC_GP22_Status_t TDC_GP22_GetPulseWidthRatio( TDC_GP22_Instance_t * Instance, TDC_GP22_PulseWidthRatio_t * PulseWidthRatio );
+    TDC_GP22_Status_t TDC_GP22_SetAnalogEnable( TDC_GP22_t GP22x, TDC_GP22_AnalogEnable_t AnalogEnable );
+    TDC_GP22_Status_t TDC_GP22_SetTemperatureInput( TDC_GP22_t GP22x, TDC_GP22_TemperatureInput_t TemperatureInput );
+    TDC_GP22_Status_t TDC_GP22_SetComparatorOffset( TDC_GP22_t GP22x, TDC_GP22_ComparatorOffset_t ComparatorOffset );
+    TDC_GP22_Status_t TDC_GP22_SetChargeTime( TDC_GP22_t GP22x, TDC_GP22_ChargeTime_t ChargeTime );
+    TDC_GP22_Status_t TDC_GP22_SetTemperatureCycle( TDC_GP22_t GP22x, TDC_GP22_TemperatureCycle_t TemperatureCycle );
+    TDC_GP22_Status_t TDC_GP22_SetTimeOfFlightCycle( TDC_GP22_t GP22x, TDC_GP22_TimeOfFlightCycle_t TimeOfFlightCycle );
+    TDC_GP22_Status_t TDC_GP22_SetCycle( TDC_GP22_t GP22x, TDC_GP22_Cycle_t Cycle );
+    TDC_GP22_Status_t TDC_GP22_SetDefaultFireLevel( TDC_GP22_t GP22x, TDC_GP22_DefaultFireLevel_t DefaultFireLevel );
+    TDC_GP22_Status_t TDC_GP22_SetResolution( TDC_GP22_t GP22x, TDC_GP22_Resolution_t Resolution );
+    TDC_GP22_Status_t TDC_GP22_SetTemperatureMeasurementDirection( TDC_GP22_t GP22x, TDC_GP22_TemperatureMeasurementDirection_t TemperatureMeasurementDirection );
 
-    TDC_GP22_Status_t TDC_GP22_GetID( TDC_GP22_Instance_t * Instance, TDC_GP22_ID_t * ID );
+    TDC_GP22_Status_t TDC_GP22_GetMeasurement_0( TDC_GP22_t GP22x, TDC_GP22_Measurement_t * Measurement );
+    TDC_GP22_Status_t TDC_GP22_GetMeasurement_1( TDC_GP22_t GP22x, TDC_GP22_Measurement_t * Measurement );
+    TDC_GP22_Status_t TDC_GP22_GetMeasurement_2( TDC_GP22_t GP22x, TDC_GP22_Measurement_t * Measurement );
+    TDC_GP22_Status_t TDC_GP22_GetMeasurement_3( TDC_GP22_t GP22x, TDC_GP22_Measurement_t * Measurement );
+    TDC_GP22_Status_t TDC_GP22_GetOperationalStatus( TDC_GP22_t GP22x, TDC_GP22_OperationalStatus_t * OperationalStatus );
+    TDC_GP22_Status_t TDC_GP22_GetPulseWidthRatio( TDC_GP22_t GP22x, TDC_GP22_PulseWidthRatio_t * PulseWidthRatio );
 
-    TDC_GP22_Status_t TDC_GP22_EEPROM_Save( TDC_GP22_Instance_t * Instance );
-    TDC_GP22_Status_t TDC_GP22_EEPROM_Load( TDC_GP22_Instance_t * Instance );
-    TDC_GP22_Status_t TDC_GP22_EEPROM_IsValid( TDC_GP22_Instance_t * Instance );
+    TDC_GP22_Status_t TDC_GP22_GetID( TDC_GP22_t GP22x, TDC_GP22_ID_t * ID );
 
-    TDC_GP22_Status_t TDC_GP22_Commit( TDC_GP22_Instance_t * Instance );
-    TDC_GP22_Status_t TDC_GP22_Reset( TDC_GP22_Instance_t * Instance );
-    TDC_GP22_Status_t TDC_GP22_Test( TDC_GP22_Instance_t * Instance );
+    TDC_GP22_Status_t TDC_GP22_EEPROM_Save( TDC_GP22_t GP22x );
+    TDC_GP22_Status_t TDC_GP22_EEPROM_Load( TDC_GP22_t GP22x );
+    TDC_GP22_Status_t TDC_GP22_EEPROM_IsValid( TDC_GP22_t GP22x );
 
-    TDC_GP22_Status_t TDC_GP22_StartTimeOfFlight( TDC_GP22_Instance_t * Instance );
-    TDC_GP22_Status_t TDC_GP22_StartTemperature( TDC_GP22_Instance_t * Instance );
-    TDC_GP22_Status_t TDC_GP22_StartCalibrateResonator( TDC_GP22_Instance_t * Instance );
-    TDC_GP22_Status_t TDC_GP22_StartCalibrateTDC( TDC_GP22_Instance_t * Instance );
-    TDC_GP22_Status_t TDC_GP22_StartTimeOfFlightRestart( TDC_GP22_Instance_t * Instance );
-    TDC_GP22_Status_t TDC_GP22_StartTemperatureRestart( TDC_GP22_Instance_t * Instance );
+    TDC_GP22_Status_t TDC_GP22_Commit( TDC_GP22_t GP22x );
+    TDC_GP22_Status_t TDC_GP22_Reset( TDC_GP22_t GP22x );
+    TDC_GP22_Status_t TDC_GP22_Test( TDC_GP22_t GP22x );
 
-    TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_0( TDC_GP22_Instance_t * Instance, uint32_t * ConfigurationRegister_0 );
-    TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_1( TDC_GP22_Instance_t * Instance, uint32_t * ConfigurationRegister_1 );
-    TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_2( TDC_GP22_Instance_t * Instance, uint32_t * ConfigurationRegister_2 );
-    TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_3( TDC_GP22_Instance_t * Instance, uint32_t * ConfigurationRegister_3 );
-    TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_4( TDC_GP22_Instance_t * Instance, uint32_t * ConfigurationRegister_4 );
-    TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_5( TDC_GP22_Instance_t * Instance, uint32_t * ConfigurationRegister_5 );
-    TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_6( TDC_GP22_Instance_t * Instance, uint32_t * ConfigurationRegister_6 );
+    TDC_GP22_Status_t TDC_GP22_StartTimeOfFlight( TDC_GP22_t GP22x );
+    TDC_GP22_Status_t TDC_GP22_StartTemperature( TDC_GP22_t GP22x );
+    TDC_GP22_Status_t TDC_GP22_StartCalibrateResonator( TDC_GP22_t GP22x );
+    TDC_GP22_Status_t TDC_GP22_StartCalibrateTDC( TDC_GP22_t GP22x );
+    TDC_GP22_Status_t TDC_GP22_StartTimeOfFlightRestart( TDC_GP22_t GP22x );
+    TDC_GP22_Status_t TDC_GP22_StartTemperatureRestart( TDC_GP22_t GP22x );
+
+    TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_0( TDC_GP22_t GP22x, uint32_t * ConfigurationRegister_0 );
+    TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_1( TDC_GP22_t GP22x, uint32_t * ConfigurationRegister_1 );
+    TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_2( TDC_GP22_t GP22x, uint32_t * ConfigurationRegister_2 );
+    TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_3( TDC_GP22_t GP22x, uint32_t * ConfigurationRegister_3 );
+    TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_4( TDC_GP22_t GP22x, uint32_t * ConfigurationRegister_4 );
+    TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_5( TDC_GP22_t GP22x, uint32_t * ConfigurationRegister_5 );
+    TDC_GP22_Status_t TDC_GP22_GetConfigurationRegister_6( TDC_GP22_t GP22x, uint32_t * ConfigurationRegister_6 );
+
+    TDC_GP22_Status_t TDC_GP22_SetOnComplete( TDC_GP22_t GP22x, TDC_GP22_OnComplete_t OnComplete );
+
+    TDC_GP22_Status_t TDC_GP22_SetOnMeasurement_0( TDC_GP22_t GP22x, TDC_GP22_OnMeasurement_t OnMeasurement );
+    TDC_GP22_Status_t TDC_GP22_SetOnMeasurement_1( TDC_GP22_t GP22x, TDC_GP22_OnMeasurement_t OnMeasurement );
+    TDC_GP22_Status_t TDC_GP22_SetOnMeasurement_2( TDC_GP22_t GP22x, TDC_GP22_OnMeasurement_t OnMeasurement );
+    TDC_GP22_Status_t TDC_GP22_SetOnMeasurement_3( TDC_GP22_t GP22x, TDC_GP22_OnMeasurement_t OnMeasurement );
 
     // #############################################################################
     // #### Public Variable(s) #####################################################

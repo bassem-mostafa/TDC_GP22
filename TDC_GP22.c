@@ -58,6 +58,10 @@
 // #### Private Macro(s) #######################################################
 // #############################################################################
 
+// FIXME Captured events should be cleared just after capturing it
+//       But as for some operations depend on it it must be maintained
+#define EVENT_CLEAR_WORKAROUND        1
+
 #define TDC_GP22_CLK                  ( 4000000.0 )          // in Hz
 #define TDC_GP22_TREF                 ( 1.0 / TDC_GP22_CLK ) // in sec
 
@@ -2809,7 +2813,9 @@ TDC_GP22_Status_t TDC_GP22_Cycle( TDC_GP22_t GP22x )
         TDC_GP22_Operation_t * Operation = &Process->Context.Operation;
         TDC_GP22_Event_t Event = Instance->Event; // CAUTION: Has to copy events occurred at the early start of the cycle, so as to be cleared at the end of the cycle,
                                                   //          which let events occurs after that for the next cycle call
-
+#if !EVENT_CLEAR_WORKAROUND                       //
+        Instance->Event &= ~Event;                //          Clear captured events
+#endif
         if ( Operation->Handler != NULL )
         {
             if ( ( Status = Operation->Handler( GP22x ) ) != TDC_GP22_Status_Success )
@@ -2826,32 +2832,41 @@ TDC_GP22_Status_t TDC_GP22_Cycle( TDC_GP22_t GP22x )
             }
         }
 
+#if EVENT_CLEAR_WORKAROUND
+        Instance->Event &= ~Event;
+#endif
+
         if ( ( Event & TDC_GP22_Event_Interrupt ) == TDC_GP22_Event_Interrupt )
         {
-            Instance->Event &= ~TDC_GP22_Event_Interrupt;
+            Event &= ~TDC_GP22_Event_Interrupt;
             TDC_Trace( "Interrupt: Instance=%p, GP22x=%d", Instance, GP22x );
             // TODO Invoke Callback
         }
 
         if ( ( Event & TDC_GP22_Event_Timeout ) == TDC_GP22_Event_Timeout )
         {
-            Instance->Event &= ~TDC_GP22_Event_Timeout;
+            Event &= ~TDC_GP22_Event_Timeout;
             TDC_Debug( "Timeout: Instance=%p, GP22x=%d", Instance, GP22x );
             // TODO Invoke Callback
         }
 
         if ( ( Event & TDC_GP22_Event_SPI_Success ) == TDC_GP22_Event_SPI_Success )
         {
-            Instance->Event &= ~TDC_GP22_Event_SPI_Success;
+            Event &= ~TDC_GP22_Event_SPI_Success;
             TDC_Debug( "SPI Success: Instance=%p, GP22x=%d", Instance, GP22x );
             // TODO Invoke Callback
         }
 
         if ( ( Event & TDC_GP22_Event_SPI_Error ) == TDC_GP22_Event_SPI_Error )
         {
-            Instance->Event &= ~TDC_GP22_Event_SPI_Error;
+            Event &= ~TDC_GP22_Event_SPI_Error;
             TDC_Debug( "SPI Error: Instance=%p, GP22x=%d", Instance, GP22x );
             // TODO Invoke Callback
+        }
+
+        if ( Event )
+        {
+            TDC_Warning( "Not handled events %X: GP22x=%d", Event, GP22x );
         }
     }
     while ( 0 );
@@ -5041,7 +5056,7 @@ TDC_GP22_Status_t TDC_GP22_SetOnMeasurement_3( TDC_GP22_t GP22x, TDC_GP22_OnMeas
 // #### Public Variable(s) #####################################################
 // #############################################################################
 
-const char TDC_GP22_VERSION[] = "0.0.0.v20260913-1832";
+const char TDC_GP22_VERSION[] = "0.0.0.v20261004-1542";
 
 // #############################################################################
 // #### File Guard #############################################################
